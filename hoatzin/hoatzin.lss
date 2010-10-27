@@ -1,0 +1,553 @@
+
+hoatzin.elf:     file format elf32-avr
+
+Sections:
+Idx Name          Size      VMA       LMA       File off  Algn
+  0 .text         000002cc  00000000  00000000  00000074  2**1
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  1 .data         00000028  00800060  000002cc  00000340  2**0
+                  CONTENTS, ALLOC, LOAD, DATA
+  2 .bss          00000008  00800088  000002f4  00000368  2**0
+                  ALLOC
+  3 .stab         00000e7c  00000000  00000000  00000368  2**2
+                  CONTENTS, READONLY, DEBUGGING
+  4 .stabstr      000008e2  00000000  00000000  000011e4  2**0
+                  CONTENTS, READONLY, DEBUGGING
+Disassembly of section .text:
+
+00000000 <__vectors>:
+   0:	09 c0       	rjmp	.+18     	; 0x14 <__ctors_end>
+   2:	21 c0       	rjmp	.+66     	; 0x46 <__bad_interrupt>
+   4:	20 c0       	rjmp	.+64     	; 0x46 <__bad_interrupt>
+   6:	1f c0       	rjmp	.+62     	; 0x46 <__bad_interrupt>
+   8:	1e c0       	rjmp	.+60     	; 0x46 <__bad_interrupt>
+   a:	1d c0       	rjmp	.+58     	; 0x46 <__bad_interrupt>
+   c:	1c c0       	rjmp	.+56     	; 0x46 <__bad_interrupt>
+   e:	1b c0       	rjmp	.+54     	; 0x46 <__bad_interrupt>
+  10:	1a c0       	rjmp	.+52     	; 0x46 <__bad_interrupt>
+  12:	6a c0       	rjmp	.+212    	; 0xe8 <__vector_9>
+
+00000014 <__ctors_end>:
+  14:	11 24       	eor	r1, r1
+  16:	1f be       	out	0x3f, r1	; 63
+  18:	cf e9       	ldi	r28, 0x9F	; 159
+  1a:	cd bf       	out	0x3d, r28	; 61
+
+0000001c <__do_copy_data>:
+  1c:	10 e0       	ldi	r17, 0x00	; 0
+  1e:	a0 e6       	ldi	r26, 0x60	; 96
+  20:	b0 e0       	ldi	r27, 0x00	; 0
+  22:	ec ec       	ldi	r30, 0xCC	; 204
+  24:	f2 e0       	ldi	r31, 0x02	; 2
+  26:	02 c0       	rjmp	.+4      	; 0x2c <.do_copy_data_start>
+
+00000028 <.do_copy_data_loop>:
+  28:	05 90       	lpm	r0, Z+
+  2a:	0d 92       	st	X+, r0
+
+0000002c <.do_copy_data_start>:
+  2c:	a8 38       	cpi	r26, 0x88	; 136
+  2e:	b1 07       	cpc	r27, r17
+  30:	d9 f7       	brne	.-10     	; 0x28 <.do_copy_data_loop>
+
+00000032 <__do_clear_bss>:
+  32:	10 e0       	ldi	r17, 0x00	; 0
+  34:	a8 e8       	ldi	r26, 0x88	; 136
+  36:	b0 e0       	ldi	r27, 0x00	; 0
+  38:	01 c0       	rjmp	.+2      	; 0x3c <.do_clear_bss_start>
+
+0000003a <.do_clear_bss_loop>:
+  3a:	1d 92       	st	X+, r1
+
+0000003c <.do_clear_bss_start>:
+  3c:	a0 39       	cpi	r26, 0x90	; 144
+  3e:	b1 07       	cpc	r27, r17
+  40:	e1 f7       	brne	.-8      	; 0x3a <.do_clear_bss_loop>
+  42:	af d0       	rcall	.+350    	; 0x1a2 <main>
+  44:	41 c1       	rjmp	.+642    	; 0x2c8 <_exit>
+
+00000046 <__bad_interrupt>:
+  46:	dc cf       	rjmp	.-72     	; 0x0 <__heap_end>
+
+00000048 <set>:
+#define ADC3 13
+
+#define HIGH 1
+#define LOW  0
+
+void set(uint8_t sPin, uint8_t value){
+  48:	38 2f       	mov	r19, r24
+	if (value) PORTB |= 1 << sPin; // set pin high
+  4a:	66 23       	and	r22, r22
+  4c:	61 f0       	breq	.+24     	; 0x66 <set+0x1e>
+  4e:	28 b3       	in	r18, 0x18	; 24
+  50:	81 e0       	ldi	r24, 0x01	; 1
+  52:	90 e0       	ldi	r25, 0x00	; 0
+  54:	03 2e       	mov	r0, r19
+  56:	02 c0       	rjmp	.+4      	; 0x5c <set+0x14>
+  58:	88 0f       	add	r24, r24
+  5a:	99 1f       	adc	r25, r25
+  5c:	0a 94       	dec	r0
+  5e:	e2 f7       	brpl	.-8      	; 0x58 <set+0x10>
+  60:	28 2b       	or	r18, r24
+  62:	28 bb       	out	0x18, r18	; 24
+  64:	0c c0       	rjmp	.+24     	; 0x7e <set+0x36>
+	else PORTB &= ~(1 << sPin); // set pin low
+  66:	28 b3       	in	r18, 0x18	; 24
+  68:	81 e0       	ldi	r24, 0x01	; 1
+  6a:	90 e0       	ldi	r25, 0x00	; 0
+  6c:	03 2e       	mov	r0, r19
+  6e:	02 c0       	rjmp	.+4      	; 0x74 <set+0x2c>
+  70:	88 0f       	add	r24, r24
+  72:	99 1f       	adc	r25, r25
+  74:	0a 94       	dec	r0
+  76:	e2 f7       	brpl	.-8      	; 0x70 <set+0x28>
+  78:	80 95       	com	r24
+  7a:	82 23       	and	r24, r18
+  7c:	88 bb       	out	0x18, r24	; 24
+	DDRB |= 1 << sPin; // set DDRB pin to output
+  7e:	27 b3       	in	r18, 0x17	; 23
+  80:	81 e0       	ldi	r24, 0x01	; 1
+  82:	90 e0       	ldi	r25, 0x00	; 0
+  84:	02 c0       	rjmp	.+4      	; 0x8a <set+0x42>
+  86:	88 0f       	add	r24, r24
+  88:	99 1f       	adc	r25, r25
+  8a:	3a 95       	dec	r19
+  8c:	e2 f7       	brpl	.-8      	; 0x86 <set+0x3e>
+  8e:	28 2b       	or	r18, r24
+  90:	27 bb       	out	0x17, r18	; 23
+}
+  92:	08 95       	ret
+
+00000094 <get>:
+
+uint8_t get(uint8_t gPin){
+  94:	28 2f       	mov	r18, r24
+	if (gPin > 9) { // analog input
+  96:	8a 30       	cpi	r24, 0x0A	; 10
+  98:	a0 f0       	brcs	.+40     	; 0xc2 <__stack+0x23>
+		ADCSRA |= 0x88;	// enable ADC (turn on ADC power) & enable ADC interrupts
+  9a:	86 b1       	in	r24, 0x06	; 6
+  9c:	88 68       	ori	r24, 0x88	; 136
+  9e:	86 b9       	out	0x06, r24	; 6
+		ADMUX |= 0x20; // set to left-adjusted result
+  a0:	3d 9a       	sbi	0x07, 5	; 7
+		sei(); // turn on interrupts (if not already on)	
+  a2:	78 94       	sei
+		ADMUX = (ADMUX & 0xFC) | (gPin-10); // set channel
+  a4:	87 b1       	in	r24, 0x07	; 7
+  a6:	2a 50       	subi	r18, 0x0A	; 10
+  a8:	8c 7f       	andi	r24, 0xFC	; 252
+  aa:	82 2b       	or	r24, r18
+  ac:	87 b9       	out	0x07, r24	; 7
+		ADCSRA |= 0x50;	// clear hardware "conversion complete" flag & start conversion
+  ae:	86 b1       	in	r24, 0x06	; 6
+  b0:	80 65       	ori	r24, 0x50	; 80
+  b2:	86 b9       	out	0x06, r24	; 6
+		while(ADCSRA & (1 << ADSC));	// wait until conversion complete
+  b4:	36 99       	sbic	0x06, 6	; 6
+  b6:	fe cf       	rjmp	.-4      	; 0xb4 <__stack+0x15>
+		ADCSRA &= 0x77; // disable ADC interrupts
+  b8:	86 b1       	in	r24, 0x06	; 6
+  ba:	87 77       	andi	r24, 0x77	; 119
+  bc:	86 b9       	out	0x06, r24	; 6
+		return (ADCH);	// read ADC (8 M.S.B.);
+  be:	95 b1       	in	r25, 0x05	; 5
+  c0:	11 c0       	rjmp	.+34     	; 0xe4 <__stack+0x45>
+	
+	} else { // digital input
+		DDRB  &= ~(1 << gPin); // set DDRB pin to input
+  c2:	37 b3       	in	r19, 0x17	; 23
+  c4:	81 e0       	ldi	r24, 0x01	; 1
+  c6:	90 e0       	ldi	r25, 0x00	; 0
+  c8:	02 c0       	rjmp	.+4      	; 0xce <__stack+0x2f>
+  ca:	88 0f       	add	r24, r24
+  cc:	99 1f       	adc	r25, r25
+  ce:	2a 95       	dec	r18
+  d0:	e2 f7       	brpl	.-8      	; 0xca <__stack+0x2b>
+  d2:	28 2f       	mov	r18, r24
+  d4:	20 95       	com	r18
+  d6:	23 23       	and	r18, r19
+  d8:	27 bb       	out	0x17, r18	; 23
+		PORTB |= 1 << gPin; // pullup
+  da:	28 b3       	in	r18, 0x18	; 24
+  dc:	28 2b       	or	r18, r24
+  de:	28 bb       	out	0x18, r18	; 24
+		return PINB & (1 << gPin); // return high or low
+  e0:	96 b3       	in	r25, 0x16	; 22
+  e2:	98 23       	and	r25, r24
+	}
+}
+  e4:	89 2f       	mov	r24, r25
+  e6:	08 95       	ret
+
+000000e8 <__vector_9>:
+
+SIGNAL(SIG_ADC)
+{
+  e8:	1f 92       	push	r1
+  ea:	0f 92       	push	r0
+  ec:	0f b6       	in	r0, 0x3f	; 63
+  ee:	0f 92       	push	r0
+  f0:	11 24       	eor	r1, r1
+	// need this for the ADC to work properly	
+}
+  f2:	0f 90       	pop	r0
+  f4:	0f be       	out	0x3f, r0	; 63
+  f6:	0f 90       	pop	r0
+  f8:	1f 90       	pop	r1
+  fa:	18 95       	reti
+
+000000fc <playTone>:
+
+uint16_t i;
+
+// PLAY TONE  ==============================================
+// Pulse the speaker to play a tone for a particular duration
+void playTone(void) {
+  fc:	af 92       	push	r10
+  fe:	bf 92       	push	r11
+ 100:	cf 92       	push	r12
+ 102:	df 92       	push	r13
+ 104:	ef 92       	push	r14
+ 106:	ff 92       	push	r15
+ 108:	0f 93       	push	r16
+ 10a:	1f 93       	push	r17
+  uint32_t elapsed_time = 0;
+  if (tone > 0) { // if this isn't a Rest beat, while the tone has 
+ 10c:	20 91 8c 00 	lds	r18, 0x008C
+ 110:	22 23       	and	r18, r18
+ 112:	09 f4       	brne	.+2      	; 0x116 <playTone+0x1a>
+ 114:	3d c0       	rjmp	.+122    	; 0x190 <playTone+0x94>
+    //  played less long than 'duration', pulse speaker HIGH and LOW
+    while (elapsed_time < duration) {
+ 116:	a0 90 88 00 	lds	r10, 0x0088
+ 11a:	b0 90 89 00 	lds	r11, 0x0089
+ 11e:	c0 90 8a 00 	lds	r12, 0x008A
+ 122:	d0 90 8b 00 	lds	r13, 0x008B
+ 126:	a0 91 8e 00 	lds	r26, 0x008E
+ 12a:	80 91 8f 00 	lds	r24, 0x008F
+ 12e:	40 e0       	ldi	r20, 0x00	; 0
+ 130:	50 e0       	ldi	r21, 0x00	; 0
+ 132:	60 e0       	ldi	r22, 0x00	; 0
+ 134:	70 e0       	ldi	r23, 0x00	; 0
+      
+      set(PB3, 1); //pull PB3 high
+      for (i=0; i<tone; i++) asm volatile("nop\n\t"::); //pause
+ 136:	e2 2f       	mov	r30, r18
+ 138:	f0 e0       	ldi	r31, 0x00	; 0
+      set(PB3, 0); // pull PB3 low
+      for (i=0; i<tone; i++) asm volatile("nop\n\t"::); //pause
+ 13a:	e2 2e       	mov	r14, r18
+ 13c:	ff 24       	eor	r15, r15
+ 13e:	00 e0       	ldi	r16, 0x00	; 0
+ 140:	10 e0       	ldi	r17, 0x00	; 0
+ 142:	1d c0       	rjmp	.+58     	; 0x17e <playTone+0x82>
+
+#define HIGH 1
+#define LOW  0
+
+void set(uint8_t sPin, uint8_t value){
+	if (value) PORTB |= 1 << sPin; // set pin high
+ 144:	c3 9a       	sbi	0x18, 3	; 24
+	else PORTB &= ~(1 << sPin); // set pin low
+	DDRB |= 1 << sPin; // set DDRB pin to output
+ 146:	bb 9a       	sbi	0x17, 3	; 23
+ 148:	20 e0       	ldi	r18, 0x00	; 0
+ 14a:	30 e0       	ldi	r19, 0x00	; 0
+ 14c:	03 c0       	rjmp	.+6      	; 0x154 <playTone+0x58>
+  if (tone > 0) { // if this isn't a Rest beat, while the tone has 
+    //  played less long than 'duration', pulse speaker HIGH and LOW
+    while (elapsed_time < duration) {
+      
+      set(PB3, 1); //pull PB3 high
+      for (i=0; i<tone; i++) asm volatile("nop\n\t"::); //pause
+ 14e:	00 00       	nop
+ 150:	2f 5f       	subi	r18, 0xFF	; 255
+ 152:	3f 4f       	sbci	r19, 0xFF	; 255
+ 154:	cf 01       	movw	r24, r30
+ 156:	ae 2f       	mov	r26, r30
+ 158:	89 2f       	mov	r24, r25
+ 15a:	2e 17       	cp	r18, r30
+ 15c:	3f 07       	cpc	r19, r31
+ 15e:	b8 f3       	brcs	.-18     	; 0x14e <playTone+0x52>
+#define HIGH 1
+#define LOW  0
+
+void set(uint8_t sPin, uint8_t value){
+	if (value) PORTB |= 1 << sPin; // set pin high
+	else PORTB &= ~(1 << sPin); // set pin low
+ 160:	c3 98       	cbi	0x18, 3	; 24
+	DDRB |= 1 << sPin; // set DDRB pin to output
+ 162:	bb 9a       	sbi	0x17, 3	; 23
+ 164:	20 e0       	ldi	r18, 0x00	; 0
+ 166:	30 e0       	ldi	r19, 0x00	; 0
+ 168:	03 c0       	rjmp	.+6      	; 0x170 <playTone+0x74>
+      set(PB3, 0); // pull PB3 low
+      for (i=0; i<tone; i++) asm volatile("nop\n\t"::); //pause
+ 16a:	00 00       	nop
+ 16c:	2f 5f       	subi	r18, 0xFF	; 255
+ 16e:	3f 4f       	sbci	r19, 0xFF	; 255
+ 170:	2e 17       	cp	r18, r30
+ 172:	3f 07       	cpc	r19, r31
+ 174:	d0 f3       	brcs	.-12     	; 0x16a <playTone+0x6e>
+ 176:	4e 0d       	add	r20, r14
+ 178:	5f 1d       	adc	r21, r15
+ 17a:	60 1f       	adc	r22, r16
+ 17c:	71 1f       	adc	r23, r17
+// Pulse the speaker to play a tone for a particular duration
+void playTone(void) {
+  uint32_t elapsed_time = 0;
+  if (tone > 0) { // if this isn't a Rest beat, while the tone has 
+    //  played less long than 'duration', pulse speaker HIGH and LOW
+    while (elapsed_time < duration) {
+ 17e:	4a 15       	cp	r20, r10
+ 180:	5b 05       	cpc	r21, r11
+ 182:	6c 05       	cpc	r22, r12
+ 184:	7d 05       	cpc	r23, r13
+ 186:	f0 f2       	brcs	.-68     	; 0x144 <playTone+0x48>
+ 188:	a0 93 8e 00 	sts	0x008E, r26
+ 18c:	80 93 8f 00 	sts	0x008F, r24
+
+      // Keep track of how long we pulsed
+      elapsed_time += (tone);
+    } 
+  }
+}
+ 190:	1f 91       	pop	r17
+ 192:	0f 91       	pop	r16
+ 194:	ff 90       	pop	r15
+ 196:	ef 90       	pop	r14
+ 198:	df 90       	pop	r13
+ 19a:	cf 90       	pop	r12
+ 19c:	bf 90       	pop	r11
+ 19e:	af 90       	pop	r10
+ 1a0:	08 95       	ret
+
+000001a2 <main>:
+
+int main(void){
+ 1a2:	0f 93       	push	r16
+ 1a4:	1f 93       	push	r17
+ 1a6:	cf 93       	push	r28
+ 1a8:	df 93       	push	r29
+#define HIGH 1
+#define LOW  0
+
+void set(uint8_t sPin, uint8_t value){
+	if (value) PORTB |= 1 << sPin; // set pin high
+	else PORTB &= ~(1 << sPin); // set pin low
+ 1aa:	c3 98       	cbi	0x18, 3	; 24
+	DDRB |= 1 << sPin; // set DDRB pin to output
+ 1ac:	bb 9a       	sbi	0x17, 3	; 23
+
+#define HIGH 1
+#define LOW  0
+
+void set(uint8_t sPin, uint8_t value){
+	if (value) PORTB |= 1 << sPin; // set pin high
+ 1ae:	c4 9a       	sbi	0x18, 4	; 24
+	else PORTB &= ~(1 << sPin); // set pin low
+	DDRB |= 1 << sPin; // set DDRB pin to output
+ 1b0:	bc 9a       	sbi	0x17, 4	; 23
+ 1b2:	00 e6       	ldi	r16, 0x60	; 96
+ 1b4:	10 e0       	ldi	r17, 0x00	; 0
+ 1b6:	c0 e0       	ldi	r28, 0x00	; 0
+ 1b8:	d0 e0       	ldi	r29, 0x00	; 0
+ 1ba:	1e c0       	rjmp	.+60     	; 0x1f8 <main+0x56>
+  //main loop
+  while(1){
+    set(PB4, HIGH);
+    for (int i=0; i<max_count; i++) {
+      
+      tone = melody[i];
+ 1bc:	f8 01       	movw	r30, r16
+ 1be:	80 81       	ld	r24, Z
+ 1c0:	80 93 8c 00 	sts	0x008C, r24
+      beat = beats[i];
+ 1c4:	fe 01       	movw	r30, r28
+ 1c6:	e0 59       	subi	r30, 0x90	; 144
+ 1c8:	ff 4f       	sbci	r31, 0xFF	; 255
+ 1ca:	80 81       	ld	r24, Z
+ 1cc:	80 93 8d 00 	sts	0x008D, r24
+        
+      duration = beat * tempo; // Set up timing
+ 1d0:	60 91 86 00 	lds	r22, 0x0086
+ 1d4:	70 91 87 00 	lds	r23, 0x0087
+ 1d8:	90 e0       	ldi	r25, 0x00	; 0
+ 1da:	64 d0       	rcall	.+200    	; 0x2a4 <__mulhi3>
+ 1dc:	a0 e0       	ldi	r26, 0x00	; 0
+ 1de:	b0 e0       	ldi	r27, 0x00	; 0
+ 1e0:	80 93 88 00 	sts	0x0088, r24
+ 1e4:	90 93 89 00 	sts	0x0089, r25
+ 1e8:	a0 93 8a 00 	sts	0x008A, r26
+ 1ec:	b0 93 8b 00 	sts	0x008B, r27
+      
+      playTone();
+ 1f0:	85 df       	rcall	.-246    	; 0xfc <playTone>
+  int32_t pause = 1250000;
+  //change this number to change the frequency
+  //main loop
+  while(1){
+    set(PB4, HIGH);
+    for (int i=0; i<max_count; i++) {
+ 1f2:	21 96       	adiw	r28, 0x01	; 1
+ 1f4:	0e 5f       	subi	r16, 0xFE	; 254
+ 1f6:	1f 4f       	sbci	r17, 0xFF	; 255
+ 1f8:	80 91 84 00 	lds	r24, 0x0084
+ 1fc:	90 e0       	ldi	r25, 0x00	; 0
+ 1fe:	c8 17       	cp	r28, r24
+ 200:	d9 07       	cpc	r29, r25
+ 202:	e4 f2       	brlt	.-72     	; 0x1bc <main+0x1a>
+#define HIGH 1
+#define LOW  0
+
+void set(uint8_t sPin, uint8_t value){
+	if (value) PORTB |= 1 << sPin; // set pin high
+	else PORTB &= ~(1 << sPin); // set pin low
+ 204:	c4 98       	cbi	0x18, 4	; 24
+	DDRB |= 1 << sPin; // set DDRB pin to output
+ 206:	bc 9a       	sbi	0x17, 4	; 23
+ 208:	80 e0       	ldi	r24, 0x00	; 0
+ 20a:	90 e0       	ldi	r25, 0x00	; 0
+ 20c:	a0 e0       	ldi	r26, 0x00	; 0
+ 20e:	b0 e0       	ldi	r27, 0x00	; 0
+      duration = beat * tempo; // Set up timing
+      
+      playTone();
+    }
+    set(PB4, LOW);
+    for(uint32_t j = 0; j < pause; j++) asm volatile("nop\n\t"::); //pause
+ 210:	00 00       	nop
+ 212:	01 96       	adiw	r24, 0x01	; 1
+ 214:	a1 1d       	adc	r26, r1
+ 216:	b1 1d       	adc	r27, r1
+ 218:	80 3d       	cpi	r24, 0xD0	; 208
+ 21a:	f2 e1       	ldi	r31, 0x12	; 18
+ 21c:	9f 07       	cpc	r25, r31
+ 21e:	f3 e1       	ldi	r31, 0x13	; 19
+ 220:	af 07       	cpc	r26, r31
+ 222:	f0 e0       	ldi	r31, 0x00	; 0
+ 224:	bf 07       	cpc	r27, r31
+ 226:	a1 f7       	brne	.-24     	; 0x210 <main+0x6e>
+
+#define HIGH 1
+#define LOW  0
+
+void set(uint8_t sPin, uint8_t value){
+	if (value) PORTB |= 1 << sPin; // set pin high
+ 228:	c4 9a       	sbi	0x18, 4	; 24
+	else PORTB &= ~(1 << sPin); // set pin low
+	DDRB |= 1 << sPin; // set DDRB pin to output
+ 22a:	bc 9a       	sbi	0x17, 4	; 23
+ 22c:	08 e7       	ldi	r16, 0x78	; 120
+ 22e:	10 e0       	ldi	r17, 0x00	; 0
+ 230:	c0 e0       	ldi	r28, 0x00	; 0
+ 232:	d0 e0       	ldi	r29, 0x00	; 0
+ 234:	1e c0       	rjmp	.+60     	; 0x272 <main+0xd0>
+    set(PB4, HIGH);
+    for (int i=0; i<max_count; i++) {
+      
+      tone = melody1[i];
+ 236:	f8 01       	movw	r30, r16
+ 238:	80 81       	ld	r24, Z
+ 23a:	80 93 8c 00 	sts	0x008C, r24
+      beat = beats1[i];
+ 23e:	fe 01       	movw	r30, r28
+ 240:	e0 58       	subi	r30, 0x80	; 128
+ 242:	ff 4f       	sbci	r31, 0xFF	; 255
+ 244:	80 81       	ld	r24, Z
+ 246:	80 93 8d 00 	sts	0x008D, r24
+        
+      duration = beat * tempo; // Set up timing
+ 24a:	60 91 86 00 	lds	r22, 0x0086
+ 24e:	70 91 87 00 	lds	r23, 0x0087
+ 252:	90 e0       	ldi	r25, 0x00	; 0
+ 254:	27 d0       	rcall	.+78     	; 0x2a4 <__mulhi3>
+ 256:	a0 e0       	ldi	r26, 0x00	; 0
+ 258:	b0 e0       	ldi	r27, 0x00	; 0
+ 25a:	80 93 88 00 	sts	0x0088, r24
+ 25e:	90 93 89 00 	sts	0x0089, r25
+ 262:	a0 93 8a 00 	sts	0x008A, r26
+ 266:	b0 93 8b 00 	sts	0x008B, r27
+      
+      playTone();
+ 26a:	48 df       	rcall	.-368    	; 0xfc <playTone>
+      playTone();
+    }
+    set(PB4, LOW);
+    for(uint32_t j = 0; j < pause; j++) asm volatile("nop\n\t"::); //pause
+    set(PB4, HIGH);
+    for (int i=0; i<max_count; i++) {
+ 26c:	21 96       	adiw	r28, 0x01	; 1
+ 26e:	0e 5f       	subi	r16, 0xFE	; 254
+ 270:	1f 4f       	sbci	r17, 0xFF	; 255
+ 272:	80 91 84 00 	lds	r24, 0x0084
+ 276:	90 e0       	ldi	r25, 0x00	; 0
+ 278:	c8 17       	cp	r28, r24
+ 27a:	d9 07       	cpc	r29, r25
+ 27c:	e4 f2       	brlt	.-72     	; 0x236 <main+0x94>
+#define HIGH 1
+#define LOW  0
+
+void set(uint8_t sPin, uint8_t value){
+	if (value) PORTB |= 1 << sPin; // set pin high
+	else PORTB &= ~(1 << sPin); // set pin low
+ 27e:	c4 98       	cbi	0x18, 4	; 24
+	DDRB |= 1 << sPin; // set DDRB pin to output
+ 280:	bc 9a       	sbi	0x17, 4	; 23
+ 282:	80 e0       	ldi	r24, 0x00	; 0
+ 284:	90 e0       	ldi	r25, 0x00	; 0
+ 286:	a0 e0       	ldi	r26, 0x00	; 0
+ 288:	b0 e0       	ldi	r27, 0x00	; 0
+      
+      playTone();
+    }
+    set(PB4, LOW);
+    // A pause between chirps
+    for(uint32_t j = 0; j < pause; j++) asm volatile("nop\n\t"::); //pause
+ 28a:	00 00       	nop
+ 28c:	01 96       	adiw	r24, 0x01	; 1
+ 28e:	a1 1d       	adc	r26, r1
+ 290:	b1 1d       	adc	r27, r1
+ 292:	80 3d       	cpi	r24, 0xD0	; 208
+ 294:	f2 e1       	ldi	r31, 0x12	; 18
+ 296:	9f 07       	cpc	r25, r31
+ 298:	f3 e1       	ldi	r31, 0x13	; 19
+ 29a:	af 07       	cpc	r26, r31
+ 29c:	f0 e0       	ldi	r31, 0x00	; 0
+ 29e:	bf 07       	cpc	r27, r31
+ 2a0:	a1 f7       	brne	.-24     	; 0x28a <main+0xe8>
+ 2a2:	85 cf       	rjmp	.-246    	; 0x1ae <main+0xc>
+
+000002a4 <__mulhi3>:
+ 2a4:	55 27       	eor	r21, r21
+ 2a6:	00 24       	eor	r0, r0
+
+000002a8 <__mulhi3_loop>:
+ 2a8:	80 ff       	sbrs	r24, 0
+ 2aa:	02 c0       	rjmp	.+4      	; 0x2b0 <__mulhi3_skip1>
+ 2ac:	06 0e       	add	r0, r22
+ 2ae:	57 1f       	adc	r21, r23
+
+000002b0 <__mulhi3_skip1>:
+ 2b0:	66 0f       	add	r22, r22
+ 2b2:	77 1f       	adc	r23, r23
+ 2b4:	61 15       	cp	r22, r1
+ 2b6:	71 05       	cpc	r23, r1
+ 2b8:	21 f0       	breq	.+8      	; 0x2c2 <__mulhi3_exit>
+ 2ba:	96 95       	lsr	r25
+ 2bc:	87 95       	ror	r24
+ 2be:	00 97       	sbiw	r24, 0x00	; 0
+ 2c0:	99 f7       	brne	.-26     	; 0x2a8 <__mulhi3_loop>
+
+000002c2 <__mulhi3_exit>:
+ 2c2:	95 2f       	mov	r25, r21
+ 2c4:	80 2d       	mov	r24, r0
+ 2c6:	08 95       	ret
+
+000002c8 <_exit>:
+ 2c8:	f8 94       	cli
+
+000002ca <__stop_program>:
+ 2ca:	ff cf       	rjmp	.-2      	; 0x2ca <__stop_program>

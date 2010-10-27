@@ -1,0 +1,626 @@
+
+lorikeet.elf:     file format elf32-avr
+
+Sections:
+Idx Name          Size      VMA       LMA       File off  Algn
+  0 .text         000003ac  00000000  00000000  00000074  2**1
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  1 .data         0000000a  00800060  000003ac  00000420  2**0
+                  CONTENTS, ALLOC, LOAD, DATA
+  2 .bss          0000000a  0080006a  000003b6  0000042a  2**0
+                  ALLOC
+  3 .stab         00000f24  00000000  00000000  0000042c  2**2
+                  CONTENTS, READONLY, DEBUGGING
+  4 .stabstr      00000920  00000000  00000000  00001350  2**0
+                  CONTENTS, READONLY, DEBUGGING
+Disassembly of section .text:
+
+00000000 <__vectors>:
+   0:	09 c0       	rjmp	.+18     	; 0x14 <__ctors_end>
+   2:	21 c0       	rjmp	.+66     	; 0x46 <__bad_interrupt>
+   4:	20 c0       	rjmp	.+64     	; 0x46 <__bad_interrupt>
+   6:	1f c0       	rjmp	.+62     	; 0x46 <__bad_interrupt>
+   8:	1e c0       	rjmp	.+60     	; 0x46 <__bad_interrupt>
+   a:	1d c0       	rjmp	.+58     	; 0x46 <__bad_interrupt>
+   c:	1c c0       	rjmp	.+56     	; 0x46 <__bad_interrupt>
+   e:	1b c0       	rjmp	.+54     	; 0x46 <__bad_interrupt>
+  10:	1a c0       	rjmp	.+52     	; 0x46 <__bad_interrupt>
+  12:	6a c0       	rjmp	.+212    	; 0xe8 <__vector_9>
+
+00000014 <__ctors_end>:
+  14:	11 24       	eor	r1, r1
+  16:	1f be       	out	0x3f, r1	; 63
+  18:	cf e9       	ldi	r28, 0x9F	; 159
+  1a:	cd bf       	out	0x3d, r28	; 61
+
+0000001c <__do_copy_data>:
+  1c:	10 e0       	ldi	r17, 0x00	; 0
+  1e:	a0 e6       	ldi	r26, 0x60	; 96
+  20:	b0 e0       	ldi	r27, 0x00	; 0
+  22:	ec ea       	ldi	r30, 0xAC	; 172
+  24:	f3 e0       	ldi	r31, 0x03	; 3
+  26:	02 c0       	rjmp	.+4      	; 0x2c <.do_copy_data_start>
+
+00000028 <.do_copy_data_loop>:
+  28:	05 90       	lpm	r0, Z+
+  2a:	0d 92       	st	X+, r0
+
+0000002c <.do_copy_data_start>:
+  2c:	aa 36       	cpi	r26, 0x6A	; 106
+  2e:	b1 07       	cpc	r27, r17
+  30:	d9 f7       	brne	.-10     	; 0x28 <.do_copy_data_loop>
+
+00000032 <__do_clear_bss>:
+  32:	10 e0       	ldi	r17, 0x00	; 0
+  34:	aa e6       	ldi	r26, 0x6A	; 106
+  36:	b0 e0       	ldi	r27, 0x00	; 0
+  38:	01 c0       	rjmp	.+2      	; 0x3c <.do_clear_bss_start>
+
+0000003a <.do_clear_bss_loop>:
+  3a:	1d 92       	st	X+, r1
+
+0000003c <.do_clear_bss_start>:
+  3c:	a4 37       	cpi	r26, 0x74	; 116
+  3e:	b1 07       	cpc	r27, r17
+  40:	e1 f7       	brne	.-8      	; 0x3a <.do_clear_bss_loop>
+  42:	f6 d0       	rcall	.+492    	; 0x230 <main>
+  44:	b1 c1       	rjmp	.+866    	; 0x3a8 <_exit>
+
+00000046 <__bad_interrupt>:
+  46:	dc cf       	rjmp	.-72     	; 0x0 <__heap_end>
+
+00000048 <set>:
+#define ADC3 13
+
+#define HIGH 1
+#define LOW  0
+
+void set(uint8_t sPin, uint8_t value){
+  48:	38 2f       	mov	r19, r24
+	if (value) PORTB |= 1 << sPin; // set pin high
+  4a:	66 23       	and	r22, r22
+  4c:	61 f0       	breq	.+24     	; 0x66 <set+0x1e>
+  4e:	28 b3       	in	r18, 0x18	; 24
+  50:	81 e0       	ldi	r24, 0x01	; 1
+  52:	90 e0       	ldi	r25, 0x00	; 0
+  54:	03 2e       	mov	r0, r19
+  56:	02 c0       	rjmp	.+4      	; 0x5c <set+0x14>
+  58:	88 0f       	add	r24, r24
+  5a:	99 1f       	adc	r25, r25
+  5c:	0a 94       	dec	r0
+  5e:	e2 f7       	brpl	.-8      	; 0x58 <set+0x10>
+  60:	28 2b       	or	r18, r24
+  62:	28 bb       	out	0x18, r18	; 24
+  64:	0c c0       	rjmp	.+24     	; 0x7e <set+0x36>
+	else PORTB &= ~(1 << sPin); // set pin low
+  66:	28 b3       	in	r18, 0x18	; 24
+  68:	81 e0       	ldi	r24, 0x01	; 1
+  6a:	90 e0       	ldi	r25, 0x00	; 0
+  6c:	03 2e       	mov	r0, r19
+  6e:	02 c0       	rjmp	.+4      	; 0x74 <set+0x2c>
+  70:	88 0f       	add	r24, r24
+  72:	99 1f       	adc	r25, r25
+  74:	0a 94       	dec	r0
+  76:	e2 f7       	brpl	.-8      	; 0x70 <set+0x28>
+  78:	80 95       	com	r24
+  7a:	82 23       	and	r24, r18
+  7c:	88 bb       	out	0x18, r24	; 24
+	DDRB |= 1 << sPin; // set DDRB pin to output
+  7e:	27 b3       	in	r18, 0x17	; 23
+  80:	81 e0       	ldi	r24, 0x01	; 1
+  82:	90 e0       	ldi	r25, 0x00	; 0
+  84:	02 c0       	rjmp	.+4      	; 0x8a <set+0x42>
+  86:	88 0f       	add	r24, r24
+  88:	99 1f       	adc	r25, r25
+  8a:	3a 95       	dec	r19
+  8c:	e2 f7       	brpl	.-8      	; 0x86 <set+0x3e>
+  8e:	28 2b       	or	r18, r24
+  90:	27 bb       	out	0x17, r18	; 23
+}
+  92:	08 95       	ret
+
+00000094 <get>:
+
+uint8_t get(uint8_t gPin){
+  94:	28 2f       	mov	r18, r24
+	if (gPin > 9) { // analog input
+  96:	8a 30       	cpi	r24, 0x0A	; 10
+  98:	a0 f0       	brcs	.+40     	; 0xc2 <__stack+0x23>
+		ADCSRA |= 0x88;	// enable ADC (turn on ADC power) & enable ADC interrupts
+  9a:	86 b1       	in	r24, 0x06	; 6
+  9c:	88 68       	ori	r24, 0x88	; 136
+  9e:	86 b9       	out	0x06, r24	; 6
+		ADMUX |= 0x20; // set to left-adjusted result
+  a0:	3d 9a       	sbi	0x07, 5	; 7
+		sei(); // turn on interrupts (if not already on)	
+  a2:	78 94       	sei
+		ADMUX = (ADMUX & 0xFC) | (gPin-10); // set channel
+  a4:	87 b1       	in	r24, 0x07	; 7
+  a6:	2a 50       	subi	r18, 0x0A	; 10
+  a8:	8c 7f       	andi	r24, 0xFC	; 252
+  aa:	82 2b       	or	r24, r18
+  ac:	87 b9       	out	0x07, r24	; 7
+		ADCSRA |= 0x50;	// clear hardware "conversion complete" flag & start conversion
+  ae:	86 b1       	in	r24, 0x06	; 6
+  b0:	80 65       	ori	r24, 0x50	; 80
+  b2:	86 b9       	out	0x06, r24	; 6
+		while(ADCSRA & (1 << ADSC));	// wait until conversion complete
+  b4:	36 99       	sbic	0x06, 6	; 6
+  b6:	fe cf       	rjmp	.-4      	; 0xb4 <__stack+0x15>
+		ADCSRA &= 0x77; // disable ADC interrupts
+  b8:	86 b1       	in	r24, 0x06	; 6
+  ba:	87 77       	andi	r24, 0x77	; 119
+  bc:	86 b9       	out	0x06, r24	; 6
+		return (ADCH);	// read ADC (8 M.S.B.);
+  be:	95 b1       	in	r25, 0x05	; 5
+  c0:	11 c0       	rjmp	.+34     	; 0xe4 <__stack+0x45>
+	
+	} else { // digital input
+		DDRB  &= ~(1 << gPin); // set DDRB pin to input
+  c2:	37 b3       	in	r19, 0x17	; 23
+  c4:	81 e0       	ldi	r24, 0x01	; 1
+  c6:	90 e0       	ldi	r25, 0x00	; 0
+  c8:	02 c0       	rjmp	.+4      	; 0xce <__stack+0x2f>
+  ca:	88 0f       	add	r24, r24
+  cc:	99 1f       	adc	r25, r25
+  ce:	2a 95       	dec	r18
+  d0:	e2 f7       	brpl	.-8      	; 0xca <__stack+0x2b>
+  d2:	28 2f       	mov	r18, r24
+  d4:	20 95       	com	r18
+  d6:	23 23       	and	r18, r19
+  d8:	27 bb       	out	0x17, r18	; 23
+		PORTB |= 1 << gPin; // pullup
+  da:	28 b3       	in	r18, 0x18	; 24
+  dc:	28 2b       	or	r18, r24
+  de:	28 bb       	out	0x18, r18	; 24
+		return PINB & (1 << gPin); // return high or low
+  e0:	96 b3       	in	r25, 0x16	; 22
+  e2:	98 23       	and	r25, r24
+	}
+}
+  e4:	89 2f       	mov	r24, r25
+  e6:	08 95       	ret
+
+000000e8 <__vector_9>:
+
+SIGNAL(SIG_ADC)
+{
+  e8:	1f 92       	push	r1
+  ea:	0f 92       	push	r0
+  ec:	0f b6       	in	r0, 0x3f	; 63
+  ee:	0f 92       	push	r0
+  f0:	11 24       	eor	r1, r1
+	// need this for the ADC to work properly	
+}
+  f2:	0f 90       	pop	r0
+  f4:	0f be       	out	0x3f, r0	; 63
+  f6:	0f 90       	pop	r0
+  f8:	1f 90       	pop	r1
+  fa:	18 95       	reti
+
+000000fc <playTone>:
+		while(ADCSRA & (1 << ADSC));	// wait until conversion complete
+		ADCSRA &= 0x77; // disable ADC interrupts
+		return (ADCH);	// read ADC (8 M.S.B.);
+	
+	} else { // digital input
+		DDRB  &= ~(1 << gPin); // set DDRB pin to input
+  fc:	af 92       	push	r10
+  fe:	bf 92       	push	r11
+ 100:	cf 92       	push	r12
+ 102:	df 92       	push	r13
+ 104:	ef 92       	push	r14
+ 106:	ff 92       	push	r15
+ 108:	0f 93       	push	r16
+ 10a:	1f 93       	push	r17
+		PORTB |= 1 << gPin; // pullup
+		return PINB & (1 << gPin); // return high or low
+ 10c:	20 91 6a 00 	lds	r18, 0x006A
+ 110:	22 23       	and	r18, r18
+ 112:	09 f4       	brne	.+2      	; 0x116 <playTone+0x1a>
+ 114:	3d c0       	rjmp	.+122    	; 0x190 <playTone+0x94>
+	}
+}
+ 116:	a0 90 6c 00 	lds	r10, 0x006C
+ 11a:	b0 90 6d 00 	lds	r11, 0x006D
+ 11e:	c0 90 6e 00 	lds	r12, 0x006E
+ 122:	d0 90 6f 00 	lds	r13, 0x006F
+ 126:	a0 91 72 00 	lds	r26, 0x0072
+ 12a:	80 91 73 00 	lds	r24, 0x0073
+ 12e:	40 e0       	ldi	r20, 0x00	; 0
+ 130:	50 e0       	ldi	r21, 0x00	; 0
+ 132:	60 e0       	ldi	r22, 0x00	; 0
+ 134:	70 e0       	ldi	r23, 0x00	; 0
+
+SIGNAL(SIG_ADC)
+{
+ 136:	e2 2f       	mov	r30, r18
+ 138:	f0 e0       	ldi	r31, 0x00	; 0
+	// need this for the ADC to work properly	
+}
+ 13a:	e2 2e       	mov	r14, r18
+ 13c:	ff 24       	eor	r15, r15
+ 13e:	00 e0       	ldi	r16, 0x00	; 0
+ 140:	10 e0       	ldi	r17, 0x00	; 0
+ 142:	1d c0       	rjmp	.+58     	; 0x17e <playTone+0x82>
+
+#define HIGH 1
+#define LOW  0
+
+void set(uint8_t sPin, uint8_t value){
+	if (value) PORTB |= 1 << sPin; // set pin high
+ 144:	c3 9a       	sbi	0x18, 3	; 24
+	else PORTB &= ~(1 << sPin); // set pin low
+	DDRB |= 1 << sPin; // set DDRB pin to output
+ 146:	bb 9a       	sbi	0x17, 3	; 23
+ 148:	20 e0       	ldi	r18, 0x00	; 0
+ 14a:	30 e0       	ldi	r19, 0x00	; 0
+ 14c:	03 c0       	rjmp	.+6      	; 0x154 <playTone+0x58>
+		return PINB & (1 << gPin); // return high or low
+	}
+}
+
+SIGNAL(SIG_ADC)
+{
+ 14e:	00 00       	nop
+ 150:	2f 5f       	subi	r18, 0xFF	; 255
+ 152:	3f 4f       	sbci	r19, 0xFF	; 255
+ 154:	cf 01       	movw	r24, r30
+ 156:	ae 2f       	mov	r26, r30
+ 158:	89 2f       	mov	r24, r25
+ 15a:	2e 17       	cp	r18, r30
+ 15c:	3f 07       	cpc	r19, r31
+ 15e:	b8 f3       	brcs	.-18     	; 0x14e <playTone+0x52>
+#define HIGH 1
+#define LOW  0
+
+void set(uint8_t sPin, uint8_t value){
+	if (value) PORTB |= 1 << sPin; // set pin high
+	else PORTB &= ~(1 << sPin); // set pin low
+ 160:	c3 98       	cbi	0x18, 3	; 24
+	DDRB |= 1 << sPin; // set DDRB pin to output
+ 162:	bb 9a       	sbi	0x17, 3	; 23
+ 164:	20 e0       	ldi	r18, 0x00	; 0
+ 166:	30 e0       	ldi	r19, 0x00	; 0
+ 168:	03 c0       	rjmp	.+6      	; 0x170 <playTone+0x74>
+}
+
+SIGNAL(SIG_ADC)
+{
+	// need this for the ADC to work properly	
+}
+ 16a:	00 00       	nop
+ 16c:	2f 5f       	subi	r18, 0xFF	; 255
+ 16e:	3f 4f       	sbci	r19, 0xFF	; 255
+ 170:	2e 17       	cp	r18, r30
+ 172:	3f 07       	cpc	r19, r31
+ 174:	d0 f3       	brcs	.-12     	; 0x16a <playTone+0x6e>
+ 176:	4e 0d       	add	r20, r14
+ 178:	5f 1d       	adc	r21, r15
+ 17a:	60 1f       	adc	r22, r16
+ 17c:	71 1f       	adc	r23, r17
+	} else { // digital input
+		DDRB  &= ~(1 << gPin); // set DDRB pin to input
+		PORTB |= 1 << gPin; // pullup
+		return PINB & (1 << gPin); // return high or low
+	}
+}
+ 17e:	4a 15       	cp	r20, r10
+ 180:	5b 05       	cpc	r21, r11
+ 182:	6c 05       	cpc	r22, r12
+ 184:	7d 05       	cpc	r23, r13
+ 186:	f0 f2       	brcs	.-68     	; 0x144 <playTone+0x48>
+ 188:	a0 93 72 00 	sts	0x0072, r26
+ 18c:	80 93 73 00 	sts	0x0073, r24
+ 190:	1f 91       	pop	r17
+ 192:	0f 91       	pop	r16
+ 194:	ff 90       	pop	r15
+ 196:	ef 90       	pop	r14
+ 198:	df 90       	pop	r13
+ 19a:	cf 90       	pop	r12
+ 19c:	bf 90       	pop	r11
+ 19e:	af 90       	pop	r10
+ 1a0:	08 95       	ret
+
+000001a2 <map>:
+ 1a2:	2f 92       	push	r2
+ 1a4:	3f 92       	push	r3
+ 1a6:	4f 92       	push	r4
+ 1a8:	5f 92       	push	r5
+ 1aa:	6f 92       	push	r6
+ 1ac:	7f 92       	push	r7
+ 1ae:	8f 92       	push	r8
+ 1b0:	9f 92       	push	r9
+ 1b2:	af 92       	push	r10
+ 1b4:	bf 92       	push	r11
+ 1b6:	cf 92       	push	r12
+ 1b8:	df 92       	push	r13
+ 1ba:	ef 92       	push	r14
+ 1bc:	ff 92       	push	r15
+ 1be:	0f 93       	push	r16
+ 1c0:	1f 93       	push	r17
+ 1c2:	df 93       	push	r29
+ 1c4:	cf 93       	push	r28
+ 1c6:	cd b7       	in	r28, 0x3d	; 61
+ 1c8:	de b7       	in	r29, 0x3e	; 62
+ 1ca:	3b 01       	movw	r6, r22
+ 1cc:	4c 01       	movw	r8, r24
+ 1ce:	19 01       	movw	r2, r18
+ 1d0:	2a 01       	movw	r4, r20
+ 1d2:	6d 89       	ldd	r22, Y+21	; 0x15
+ 1d4:	7e 89       	ldd	r23, Y+22	; 0x16
+ 1d6:	8f 89       	ldd	r24, Y+23	; 0x17
+ 1d8:	98 8d       	ldd	r25, Y+24	; 0x18
+ 1da:	6a 19       	sub	r22, r10
+ 1dc:	7b 09       	sbc	r23, r11
+ 1de:	8c 09       	sbc	r24, r12
+ 1e0:	9d 09       	sbc	r25, r13
+ 1e2:	62 1a       	sub	r6, r18
+ 1e4:	73 0a       	sbc	r7, r19
+ 1e6:	84 0a       	sbc	r8, r20
+ 1e8:	95 0a       	sbc	r9, r21
+ 1ea:	a4 01       	movw	r20, r8
+ 1ec:	93 01       	movw	r18, r6
+ 1ee:	a1 d0       	rcall	.+322    	; 0x332 <__mulsi3>
+ 1f0:	e2 18       	sub	r14, r2
+ 1f2:	f3 08       	sbc	r15, r3
+ 1f4:	04 09       	sbc	r16, r4
+ 1f6:	15 09       	sbc	r17, r5
+ 1f8:	a8 01       	movw	r20, r16
+ 1fa:	97 01       	movw	r18, r14
+ 1fc:	b3 d0       	rcall	.+358    	; 0x364 <__udivmodsi4>
+ 1fe:	2a 0d       	add	r18, r10
+ 200:	3b 1d       	adc	r19, r11
+ 202:	4c 1d       	adc	r20, r12
+ 204:	5d 1d       	adc	r21, r13
+ 206:	b9 01       	movw	r22, r18
+ 208:	ca 01       	movw	r24, r20
+ 20a:	cf 91       	pop	r28
+ 20c:	df 91       	pop	r29
+ 20e:	1f 91       	pop	r17
+ 210:	0f 91       	pop	r16
+ 212:	ff 90       	pop	r15
+ 214:	ef 90       	pop	r14
+ 216:	df 90       	pop	r13
+ 218:	cf 90       	pop	r12
+ 21a:	bf 90       	pop	r11
+ 21c:	af 90       	pop	r10
+ 21e:	9f 90       	pop	r9
+ 220:	8f 90       	pop	r8
+ 222:	7f 90       	pop	r7
+ 224:	6f 90       	pop	r6
+ 226:	5f 90       	pop	r5
+ 228:	4f 90       	pop	r4
+ 22a:	3f 90       	pop	r3
+ 22c:	2f 90       	pop	r2
+ 22e:	08 95       	ret
+
+00000230 <main>:
+ 230:	af 92       	push	r10
+ 232:	bf 92       	push	r11
+ 234:	cf 92       	push	r12
+ 236:	df 92       	push	r13
+ 238:	ef 92       	push	r14
+ 23a:	ff 92       	push	r15
+ 23c:	0f 93       	push	r16
+ 23e:	1f 93       	push	r17
+ 240:	cf 93       	push	r28
+ 242:	df 93       	push	r29
+#define HIGH 1
+#define LOW  0
+
+void set(uint8_t sPin, uint8_t value){
+	if (value) PORTB |= 1 << sPin; // set pin high
+	else PORTB &= ~(1 << sPin); // set pin low
+ 244:	c3 98       	cbi	0x18, 3	; 24
+	DDRB |= 1 << sPin; // set DDRB pin to output
+ 246:	bb 9a       	sbi	0x17, 3	; 23
+ 248:	8b e0       	ldi	r24, 0x0B	; 11
+ 24a:	24 df       	rcall	.-440    	; 0x94 <get>
+ 24c:	86 95       	lsr	r24
+ 24e:	a8 2e       	mov	r10, r24
+ 250:	bb 24       	eor	r11, r11
+ 252:	ee 24       	eor	r14, r14
+ 254:	ff 24       	eor	r15, r15
+ 256:	44 c0       	rjmp	.+136    	; 0x2e0 <main+0xb0>
+
+#define HIGH 1
+#define LOW  0
+
+void set(uint8_t sPin, uint8_t value){
+	if (value) PORTB |= 1 << sPin; // set pin high
+ 258:	c1 9a       	sbi	0x18, 1	; 24
+	else PORTB &= ~(1 << sPin); // set pin low
+	DDRB |= 1 << sPin; // set DDRB pin to output
+ 25a:	b9 9a       	sbi	0x17, 1	; 23
+ 25c:	00 e6       	ldi	r16, 0x60	; 96
+ 25e:	10 e0       	ldi	r17, 0x00	; 0
+ 260:	c0 e0       	ldi	r28, 0x00	; 0
+ 262:	d0 e0       	ldi	r29, 0x00	; 0
+ 264:	1e c0       	rjmp	.+60     	; 0x2a2 <main+0x72>
+ 266:	f8 01       	movw	r30, r16
+ 268:	80 81       	ld	r24, Z
+ 26a:	80 93 6a 00 	sts	0x006A, r24
+ 26e:	fe 01       	movw	r30, r28
+ 270:	ec 59       	subi	r30, 0x9C	; 156
+ 272:	ff 4f       	sbci	r31, 0xFF	; 255
+ 274:	80 81       	ld	r24, Z
+ 276:	80 93 6b 00 	sts	0x006B, r24
+ 27a:	60 91 68 00 	lds	r22, 0x0068
+ 27e:	70 91 69 00 	lds	r23, 0x0069
+ 282:	90 e0       	ldi	r25, 0x00	; 0
+ 284:	44 d0       	rcall	.+136    	; 0x30e <__mulhi3>
+ 286:	a0 e0       	ldi	r26, 0x00	; 0
+ 288:	b0 e0       	ldi	r27, 0x00	; 0
+ 28a:	80 93 6c 00 	sts	0x006C, r24
+ 28e:	90 93 6d 00 	sts	0x006D, r25
+ 292:	a0 93 6e 00 	sts	0x006E, r26
+ 296:	b0 93 6f 00 	sts	0x006F, r27
+ 29a:	30 df       	rcall	.-416    	; 0xfc <playTone>
+ 29c:	21 96       	adiw	r28, 0x01	; 1
+ 29e:	0e 5f       	subi	r16, 0xFE	; 254
+ 2a0:	1f 4f       	sbci	r17, 0xFF	; 255
+ 2a2:	80 91 66 00 	lds	r24, 0x0066
+ 2a6:	90 91 67 00 	lds	r25, 0x0067
+ 2aa:	c8 17       	cp	r28, r24
+ 2ac:	d9 07       	cpc	r29, r25
+ 2ae:	d8 f2       	brcs	.-74     	; 0x266 <main+0x36>
+#define HIGH 1
+#define LOW  0
+
+void set(uint8_t sPin, uint8_t value){
+	if (value) PORTB |= 1 << sPin; // set pin high
+	else PORTB &= ~(1 << sPin); // set pin low
+ 2b0:	c1 98       	cbi	0x18, 1	; 24
+	DDRB |= 1 << sPin; // set DDRB pin to output
+ 2b2:	b9 9a       	sbi	0x17, 1	; 23
+ 2b4:	8b e0       	ldi	r24, 0x0B	; 11
+ 2b6:	ee de       	rcall	.-548    	; 0x94 <get>
+ 2b8:	90 e0       	ldi	r25, 0x00	; 0
+ 2ba:	a0 e0       	ldi	r26, 0x00	; 0
+ 2bc:	b0 e0       	ldi	r27, 0x00	; 0
+ 2be:	bc 01       	movw	r22, r24
+ 2c0:	cd 01       	movw	r24, r26
+ 2c2:	20 ee       	ldi	r18, 0xE0	; 224
+ 2c4:	30 e7       	ldi	r19, 0x70	; 112
+ 2c6:	42 e7       	ldi	r20, 0x72	; 114
+ 2c8:	50 e0       	ldi	r21, 0x00	; 0
+ 2ca:	33 d0       	rcall	.+102    	; 0x332 <__mulsi3>
+ 2cc:	2f ef       	ldi	r18, 0xFF	; 255
+ 2ce:	30 e0       	ldi	r19, 0x00	; 0
+ 2d0:	40 e0       	ldi	r20, 0x00	; 0
+ 2d2:	50 e0       	ldi	r21, 0x00	; 0
+ 2d4:	47 d0       	rcall	.+142    	; 0x364 <__udivmodsi4>
+ 2d6:	69 01       	movw	r12, r18
+ 2d8:	8a 01       	movw	r16, r20
+ 2da:	08 94       	sec
+ 2dc:	e1 1c       	adc	r14, r1
+ 2de:	f1 1c       	adc	r15, r1
+ 2e0:	ea 14       	cp	r14, r10
+ 2e2:	fb 04       	cpc	r15, r11
+ 2e4:	0c f4       	brge	.+2      	; 0x2e8 <main+0xb8>
+ 2e6:	b8 cf       	rjmp	.-144    	; 0x258 <main+0x28>
+ 2e8:	c6 01       	movw	r24, r12
+ 2ea:	d8 01       	movw	r26, r16
+ 2ec:	20 e0       	ldi	r18, 0x00	; 0
+ 2ee:	30 e0       	ldi	r19, 0x00	; 0
+ 2f0:	40 e0       	ldi	r20, 0x00	; 0
+ 2f2:	50 e0       	ldi	r21, 0x00	; 0
+ 2f4:	05 c0       	rjmp	.+10     	; 0x300 <main+0xd0>
+ 2f6:	00 00       	nop
+ 2f8:	2f 5f       	subi	r18, 0xFF	; 255
+ 2fa:	3f 4f       	sbci	r19, 0xFF	; 255
+ 2fc:	4f 4f       	sbci	r20, 0xFF	; 255
+ 2fe:	5f 4f       	sbci	r21, 0xFF	; 255
+ 300:	28 17       	cp	r18, r24
+ 302:	39 07       	cpc	r19, r25
+ 304:	4a 07       	cpc	r20, r26
+ 306:	5b 07       	cpc	r21, r27
+ 308:	08 f0       	brcs	.+2      	; 0x30c <main+0xdc>
+ 30a:	9e cf       	rjmp	.-196    	; 0x248 <main+0x18>
+ 30c:	f4 cf       	rjmp	.-24     	; 0x2f6 <main+0xc6>
+
+0000030e <__mulhi3>:
+ 30e:	55 27       	eor	r21, r21
+ 310:	00 24       	eor	r0, r0
+
+00000312 <__mulhi3_loop>:
+ 312:	80 ff       	sbrs	r24, 0
+ 314:	02 c0       	rjmp	.+4      	; 0x31a <__mulhi3_skip1>
+ 316:	06 0e       	add	r0, r22
+ 318:	57 1f       	adc	r21, r23
+
+0000031a <__mulhi3_skip1>:
+ 31a:	66 0f       	add	r22, r22
+ 31c:	77 1f       	adc	r23, r23
+ 31e:	61 15       	cp	r22, r1
+ 320:	71 05       	cpc	r23, r1
+ 322:	21 f0       	breq	.+8      	; 0x32c <__mulhi3_exit>
+ 324:	96 95       	lsr	r25
+ 326:	87 95       	ror	r24
+ 328:	00 97       	sbiw	r24, 0x00	; 0
+ 32a:	99 f7       	brne	.-26     	; 0x312 <__mulhi3_loop>
+
+0000032c <__mulhi3_exit>:
+ 32c:	95 2f       	mov	r25, r21
+ 32e:	80 2d       	mov	r24, r0
+ 330:	08 95       	ret
+
+00000332 <__mulsi3>:
+ 332:	ff 27       	eor	r31, r31
+ 334:	ee 27       	eor	r30, r30
+ 336:	bb 27       	eor	r27, r27
+ 338:	aa 27       	eor	r26, r26
+
+0000033a <__mulsi3_loop>:
+ 33a:	60 ff       	sbrs	r22, 0
+ 33c:	04 c0       	rjmp	.+8      	; 0x346 <__mulsi3_skip1>
+ 33e:	a2 0f       	add	r26, r18
+ 340:	b3 1f       	adc	r27, r19
+ 342:	e4 1f       	adc	r30, r20
+ 344:	f5 1f       	adc	r31, r21
+
+00000346 <__mulsi3_skip1>:
+ 346:	22 0f       	add	r18, r18
+ 348:	33 1f       	adc	r19, r19
+ 34a:	44 1f       	adc	r20, r20
+ 34c:	55 1f       	adc	r21, r21
+ 34e:	96 95       	lsr	r25
+ 350:	87 95       	ror	r24
+ 352:	77 95       	ror	r23
+ 354:	67 95       	ror	r22
+ 356:	89 f7       	brne	.-30     	; 0x33a <__mulsi3_loop>
+ 358:	00 97       	sbiw	r24, 0x00	; 0
+ 35a:	76 07       	cpc	r23, r22
+ 35c:	71 f7       	brne	.-36     	; 0x33a <__mulsi3_loop>
+
+0000035e <__mulsi3_exit>:
+ 35e:	cf 01       	movw	r24, r30
+ 360:	bd 01       	movw	r22, r26
+ 362:	08 95       	ret
+
+00000364 <__udivmodsi4>:
+ 364:	a1 e2       	ldi	r26, 0x21	; 33
+ 366:	1a 2e       	mov	r1, r26
+ 368:	aa 1b       	sub	r26, r26
+ 36a:	bb 1b       	sub	r27, r27
+ 36c:	fd 01       	movw	r30, r26
+ 36e:	0d c0       	rjmp	.+26     	; 0x38a <__udivmodsi4_ep>
+
+00000370 <__udivmodsi4_loop>:
+ 370:	aa 1f       	adc	r26, r26
+ 372:	bb 1f       	adc	r27, r27
+ 374:	ee 1f       	adc	r30, r30
+ 376:	ff 1f       	adc	r31, r31
+ 378:	a2 17       	cp	r26, r18
+ 37a:	b3 07       	cpc	r27, r19
+ 37c:	e4 07       	cpc	r30, r20
+ 37e:	f5 07       	cpc	r31, r21
+ 380:	20 f0       	brcs	.+8      	; 0x38a <__udivmodsi4_ep>
+ 382:	a2 1b       	sub	r26, r18
+ 384:	b3 0b       	sbc	r27, r19
+ 386:	e4 0b       	sbc	r30, r20
+ 388:	f5 0b       	sbc	r31, r21
+
+0000038a <__udivmodsi4_ep>:
+ 38a:	66 1f       	adc	r22, r22
+ 38c:	77 1f       	adc	r23, r23
+ 38e:	88 1f       	adc	r24, r24
+ 390:	99 1f       	adc	r25, r25
+ 392:	1a 94       	dec	r1
+ 394:	69 f7       	brne	.-38     	; 0x370 <__udivmodsi4_loop>
+ 396:	60 95       	com	r22
+ 398:	70 95       	com	r23
+ 39a:	80 95       	com	r24
+ 39c:	90 95       	com	r25
+ 39e:	9b 01       	movw	r18, r22
+ 3a0:	ac 01       	movw	r20, r24
+ 3a2:	bd 01       	movw	r22, r26
+ 3a4:	cf 01       	movw	r24, r30
+ 3a6:	08 95       	ret
+
+000003a8 <_exit>:
+ 3a8:	f8 94       	cli
+
+000003aa <__stop_program>:
+ 3aa:	ff cf       	rjmp	.-2      	; 0x3aa <__stop_program>

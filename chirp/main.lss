@@ -1,0 +1,265 @@
+
+main.elf:     file format elf32-avr
+
+Sections:
+Idx Name          Size      VMA       LMA       File off  Algn
+  0 .text         0000013c  00000000  00000000  00000054  2**1
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  1 .stab         00000c3c  00000000  00000000  00000190  2**2
+                  CONTENTS, READONLY, DEBUGGING
+  2 .stabstr      000007b9  00000000  00000000  00000dcc  2**0
+                  CONTENTS, READONLY, DEBUGGING
+Disassembly of section .text:
+
+00000000 <__vectors>:
+   0:	09 c0       	rjmp	.+18     	; 0x14 <__ctors_end>
+   2:	21 c0       	rjmp	.+66     	; 0x46 <__bad_interrupt>
+   4:	20 c0       	rjmp	.+64     	; 0x46 <__bad_interrupt>
+   6:	1f c0       	rjmp	.+62     	; 0x46 <__bad_interrupt>
+   8:	1e c0       	rjmp	.+60     	; 0x46 <__bad_interrupt>
+   a:	1d c0       	rjmp	.+58     	; 0x46 <__bad_interrupt>
+   c:	1c c0       	rjmp	.+56     	; 0x46 <__bad_interrupt>
+   e:	1b c0       	rjmp	.+54     	; 0x46 <__bad_interrupt>
+  10:	1a c0       	rjmp	.+52     	; 0x46 <__bad_interrupt>
+  12:	6a c0       	rjmp	.+212    	; 0xe8 <__vector_9>
+
+00000014 <__ctors_end>:
+  14:	11 24       	eor	r1, r1
+  16:	1f be       	out	0x3f, r1	; 63
+  18:	cf e9       	ldi	r28, 0x9F	; 159
+  1a:	cd bf       	out	0x3d, r28	; 61
+
+0000001c <__do_copy_data>:
+  1c:	10 e0       	ldi	r17, 0x00	; 0
+  1e:	a0 e6       	ldi	r26, 0x60	; 96
+  20:	b0 e0       	ldi	r27, 0x00	; 0
+  22:	ec e3       	ldi	r30, 0x3C	; 60
+  24:	f1 e0       	ldi	r31, 0x01	; 1
+  26:	02 c0       	rjmp	.+4      	; 0x2c <.do_copy_data_start>
+
+00000028 <.do_copy_data_loop>:
+  28:	05 90       	lpm	r0, Z+
+  2a:	0d 92       	st	X+, r0
+
+0000002c <.do_copy_data_start>:
+  2c:	a0 36       	cpi	r26, 0x60	; 96
+  2e:	b1 07       	cpc	r27, r17
+  30:	d9 f7       	brne	.-10     	; 0x28 <.do_copy_data_loop>
+
+00000032 <__do_clear_bss>:
+  32:	10 e0       	ldi	r17, 0x00	; 0
+  34:	a0 e6       	ldi	r26, 0x60	; 96
+  36:	b0 e0       	ldi	r27, 0x00	; 0
+  38:	01 c0       	rjmp	.+2      	; 0x3c <.do_clear_bss_start>
+
+0000003a <.do_clear_bss_loop>:
+  3a:	1d 92       	st	X+, r1
+
+0000003c <.do_clear_bss_start>:
+  3c:	a0 36       	cpi	r26, 0x60	; 96
+  3e:	b1 07       	cpc	r27, r17
+  40:	e1 f7       	brne	.-8      	; 0x3a <.do_clear_bss_loop>
+  42:	5c d0       	rcall	.+184    	; 0xfc <main>
+  44:	79 c0       	rjmp	.+242    	; 0x138 <_exit>
+
+00000046 <__bad_interrupt>:
+  46:	dc cf       	rjmp	.-72     	; 0x0 <__heap_end>
+
+00000048 <set>:
+#define ADC3 13
+
+#define HIGH 1
+#define LOW  0
+
+void set(uint8_t sPin, uint8_t value){
+  48:	38 2f       	mov	r19, r24
+	if (value) PORTB |= 1 << sPin; // set pin high
+  4a:	66 23       	and	r22, r22
+  4c:	61 f0       	breq	.+24     	; 0x66 <set+0x1e>
+  4e:	28 b3       	in	r18, 0x18	; 24
+  50:	81 e0       	ldi	r24, 0x01	; 1
+  52:	90 e0       	ldi	r25, 0x00	; 0
+  54:	03 2e       	mov	r0, r19
+  56:	02 c0       	rjmp	.+4      	; 0x5c <set+0x14>
+  58:	88 0f       	add	r24, r24
+  5a:	99 1f       	adc	r25, r25
+  5c:	0a 94       	dec	r0
+  5e:	e2 f7       	brpl	.-8      	; 0x58 <set+0x10>
+  60:	28 2b       	or	r18, r24
+  62:	28 bb       	out	0x18, r18	; 24
+  64:	0c c0       	rjmp	.+24     	; 0x7e <set+0x36>
+	else PORTB &= ~(1 << sPin); // set pin low
+  66:	28 b3       	in	r18, 0x18	; 24
+  68:	81 e0       	ldi	r24, 0x01	; 1
+  6a:	90 e0       	ldi	r25, 0x00	; 0
+  6c:	03 2e       	mov	r0, r19
+  6e:	02 c0       	rjmp	.+4      	; 0x74 <set+0x2c>
+  70:	88 0f       	add	r24, r24
+  72:	99 1f       	adc	r25, r25
+  74:	0a 94       	dec	r0
+  76:	e2 f7       	brpl	.-8      	; 0x70 <set+0x28>
+  78:	80 95       	com	r24
+  7a:	82 23       	and	r24, r18
+  7c:	88 bb       	out	0x18, r24	; 24
+	DDRB |= 1 << sPin; // set DDRB pin to output
+  7e:	27 b3       	in	r18, 0x17	; 23
+  80:	81 e0       	ldi	r24, 0x01	; 1
+  82:	90 e0       	ldi	r25, 0x00	; 0
+  84:	02 c0       	rjmp	.+4      	; 0x8a <set+0x42>
+  86:	88 0f       	add	r24, r24
+  88:	99 1f       	adc	r25, r25
+  8a:	3a 95       	dec	r19
+  8c:	e2 f7       	brpl	.-8      	; 0x86 <set+0x3e>
+  8e:	28 2b       	or	r18, r24
+  90:	27 bb       	out	0x17, r18	; 23
+}
+  92:	08 95       	ret
+
+00000094 <get>:
+
+uint8_t get(uint8_t gPin){
+  94:	28 2f       	mov	r18, r24
+	if (gPin > 9) { // analog input
+  96:	8a 30       	cpi	r24, 0x0A	; 10
+  98:	a0 f0       	brcs	.+40     	; 0xc2 <__stack+0x23>
+		ADCSRA |= 0x88;	// enable ADC (turn on ADC power) & enable ADC interrupts
+  9a:	86 b1       	in	r24, 0x06	; 6
+  9c:	88 68       	ori	r24, 0x88	; 136
+  9e:	86 b9       	out	0x06, r24	; 6
+		ADMUX |= 0x20; // set to left-adjusted result
+  a0:	3d 9a       	sbi	0x07, 5	; 7
+		sei(); // turn on interrupts (if not already on)	
+  a2:	78 94       	sei
+		ADMUX = (ADMUX & 0xFC) | (gPin-10); // set channel
+  a4:	87 b1       	in	r24, 0x07	; 7
+  a6:	2a 50       	subi	r18, 0x0A	; 10
+  a8:	8c 7f       	andi	r24, 0xFC	; 252
+  aa:	82 2b       	or	r24, r18
+  ac:	87 b9       	out	0x07, r24	; 7
+		ADCSRA |= 0x50;	// clear hardware "conversion complete" flag & start conversion
+  ae:	86 b1       	in	r24, 0x06	; 6
+  b0:	80 65       	ori	r24, 0x50	; 80
+  b2:	86 b9       	out	0x06, r24	; 6
+		while(ADCSRA & (1 << ADSC));	// wait until conversion complete
+  b4:	36 99       	sbic	0x06, 6	; 6
+  b6:	fe cf       	rjmp	.-4      	; 0xb4 <__stack+0x15>
+		ADCSRA &= 0x77; // disable ADC interrupts
+  b8:	86 b1       	in	r24, 0x06	; 6
+  ba:	87 77       	andi	r24, 0x77	; 119
+  bc:	86 b9       	out	0x06, r24	; 6
+		return (ADCH);	// read ADC (8 M.S.B.);
+  be:	95 b1       	in	r25, 0x05	; 5
+  c0:	11 c0       	rjmp	.+34     	; 0xe4 <__stack+0x45>
+	
+	} else { // digital input
+		DDRB  &= ~(1 << gPin); // set DDRB pin to input
+  c2:	37 b3       	in	r19, 0x17	; 23
+  c4:	81 e0       	ldi	r24, 0x01	; 1
+  c6:	90 e0       	ldi	r25, 0x00	; 0
+  c8:	02 c0       	rjmp	.+4      	; 0xce <__stack+0x2f>
+  ca:	88 0f       	add	r24, r24
+  cc:	99 1f       	adc	r25, r25
+  ce:	2a 95       	dec	r18
+  d0:	e2 f7       	brpl	.-8      	; 0xca <__stack+0x2b>
+  d2:	28 2f       	mov	r18, r24
+  d4:	20 95       	com	r18
+  d6:	23 23       	and	r18, r19
+  d8:	27 bb       	out	0x17, r18	; 23
+		PORTB |= 1 << gPin; // pullup
+  da:	28 b3       	in	r18, 0x18	; 24
+  dc:	28 2b       	or	r18, r24
+  de:	28 bb       	out	0x18, r18	; 24
+		return PINB & (1 << gPin); // return high or low
+  e0:	96 b3       	in	r25, 0x16	; 22
+  e2:	98 23       	and	r25, r24
+	}
+}
+  e4:	89 2f       	mov	r24, r25
+  e6:	08 95       	ret
+
+000000e8 <__vector_9>:
+
+SIGNAL(SIG_ADC)
+{
+  e8:	1f 92       	push	r1
+  ea:	0f 92       	push	r0
+  ec:	0f b6       	in	r0, 0x3f	; 63
+  ee:	0f 92       	push	r0
+  f0:	11 24       	eor	r1, r1
+	// need this for the ADC to work properly	
+}
+  f2:	0f 90       	pop	r0
+  f4:	0f be       	out	0x3f, r0	; 63
+  f6:	0f 90       	pop	r0
+  f8:	1f 90       	pop	r1
+  fa:	18 95       	reti
+
+000000fc <main>:
+#define HIGH 1
+#define LOW  0
+
+void set(uint8_t sPin, uint8_t value){
+	if (value) PORTB |= 1 << sPin; // set pin high
+	else PORTB &= ~(1 << sPin); // set pin low
+  fc:	c0 98       	cbi	0x18, 0	; 24
+	DDRB |= 1 << sPin; // set DDRB pin to output
+  fe:	b8 9a       	sbi	0x17, 0	; 23
+
+#define HIGH 1
+#define LOW  0
+
+void set(uint8_t sPin, uint8_t value){
+	if (value) PORTB |= 1 << sPin; // set pin high
+ 100:	c0 9a       	sbi	0x18, 0	; 24
+	else PORTB &= ~(1 << sPin); // set pin low
+	DDRB |= 1 << sPin; // set DDRB pin to output
+ 102:	b8 9a       	sbi	0x17, 0	; 23
+  //change this number to change the frequency
+  
+  //main loop
+  while(1){
+    set(PB0, 1); //pull PB0 high
+    ain = get(ADC1);
+ 104:	8b e0       	ldi	r24, 0x0B	; 11
+ 106:	c6 df       	rcall	.-116    	; 0x94 <get>
+ 108:	90 e0       	ldi	r25, 0x00	; 0
+    ain *= 2;
+ 10a:	88 0f       	add	r24, r24
+ 10c:	99 1f       	adc	r25, r25
+ 10e:	20 e0       	ldi	r18, 0x00	; 0
+ 110:	30 e0       	ldi	r19, 0x00	; 0
+ 112:	03 c0       	rjmp	.+6      	; 0x11a <main+0x1e>
+    for (i=0; i<ain; i++) asm volatile("nop\n\t"::); //pause
+ 114:	00 00       	nop
+ 116:	2f 5f       	subi	r18, 0xFF	; 255
+ 118:	3f 4f       	sbci	r19, 0xFF	; 255
+ 11a:	28 17       	cp	r18, r24
+ 11c:	39 07       	cpc	r19, r25
+ 11e:	d0 f3       	brcs	.-12     	; 0x114 <main+0x18>
+#define HIGH 1
+#define LOW  0
+
+void set(uint8_t sPin, uint8_t value){
+	if (value) PORTB |= 1 << sPin; // set pin high
+	else PORTB &= ~(1 << sPin); // set pin low
+ 120:	c0 98       	cbi	0x18, 0	; 24
+	DDRB |= 1 << sPin; // set DDRB pin to output
+ 122:	b8 9a       	sbi	0x17, 0	; 23
+ 124:	20 e0       	ldi	r18, 0x00	; 0
+ 126:	30 e0       	ldi	r19, 0x00	; 0
+ 128:	03 c0       	rjmp	.+6      	; 0x130 <main+0x34>
+    set(PB0, 0); // pull PB0 low
+    for (i=0; i<ain; i++) asm volatile("nop\n\t"::); //pause
+ 12a:	00 00       	nop
+ 12c:	2f 5f       	subi	r18, 0xFF	; 255
+ 12e:	3f 4f       	sbci	r19, 0xFF	; 255
+ 130:	28 17       	cp	r18, r24
+ 132:	39 07       	cpc	r19, r25
+ 134:	28 f7       	brcc	.-54     	; 0x100 <main+0x4>
+ 136:	f9 cf       	rjmp	.-14     	; 0x12a <main+0x2e>
+
+00000138 <_exit>:
+ 138:	f8 94       	cli
+
+0000013a <__stop_program>:
+ 13a:	ff cf       	rjmp	.-2      	; 0x13a <__stop_program>

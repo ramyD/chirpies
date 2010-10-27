@@ -1,0 +1,27 @@
+#include <avr/io.h>
+#include <avr/signal.h>
+#include <avr/interrupt.h>
+#include "/usr/local/include/avrlib/conf/global.h"
+#include "/usr/local/include/avrlib/a2d.h"
+
+int main(void){
+  a2dinit();
+  //initialize GPIO pins
+  DDRB  |= 0x01; //set PB0 to output
+  PORTB &= 0XFE; //pull PB0 low
+  
+  //declare and initialize variables
+  uint16_t i;
+  //change this number to change the frequency
+  
+  //main loop
+  while(1){
+    uint8_t ain;
+    ain = a2dConvert8bit(1);//save sensor value to the variable
+    
+    PORTB |= 0x01; //pull PB0 high
+    for (i=0; i<ain; i++) asm volatile("nop\n\t"::); //pause
+    PORTB &= 0xFE; // pull PB0 low
+    for (i=0; i<ain; i++) asm volatile("nop\n\t"::); //pause
+  }
+}

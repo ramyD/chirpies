@@ -1,0 +1,740 @@
+   1               		.file	"hoatzin.c"
+   2               	__SREG__ = 0x3f
+   3               	__SP_H__ = 0x3e
+   4               	__SP_L__ = 0x3d
+   5               	__CCP__  = 0x34
+   6               	__tmp_reg__ = 0
+   7               	__zero_reg__ = 1
+   8               		.global __do_copy_data
+   9               		.global __do_clear_bss
+  12               		.text
+  13               	.Ltext0:
+  74               	.global	set
+  76               	set:
+  77               		.stabd	46,0,0
+  79               	.Ltext1:
+   1:../getset.h   **** //////////////////////////////////////////////////////
+   2:../getset.h   **** //
+   3:../getset.h   **** // GET/SET ABSTRACTION LAYER FOR ATTINY13
+   4:../getset.h   **** //
+   5:../getset.h   **** //////////////////////////////////////////////////////
+   6:../getset.h   **** //
+   7:../getset.h   **** // USAGE
+   8:../getset.h   **** //         get(gPin) to get input state from pin
+   9:../getset.h   **** //             The gPin variable can be anything from 
+  10:../getset.h   **** //             PB0 to PB4 to get digital input and 
+  11:../getset.h   **** //             ADC1 to ADC3 to get analog input.
+  12:../getset.h   **** //             The return value can be HIGH (1) or
+  13:../getset.h   **** //             LOW (0) for digital and 0..255 for analog.
+  14:../getset.h   **** //
+  15:../getset.h   **** //         set(sPin, value) to set state of pin
+  16:../getset.h   **** //             The sPin variable can be anything from
+  17:../getset.h   **** //             PB0 to PB4 to set the output (0-5V) of
+  18:../getset.h   **** //             the output pin.
+  19:../getset.h   **** //             The value variable can be HIGH (1) or
+  20:../getset.h   **** //             LOW (0).
+  21:../getset.h   **** //
+  22:../getset.h   **** //
+  23:../getset.h   **** // (CC) Vincent Leclerc 10/2006
+  24:../getset.h   **** //
+  25:../getset.h   **** //////////////////////////////////////////////////////
+  26:../getset.h   **** 
+  27:../getset.h   **** #include <avr/interrupt.h>
+  28:../getset.h   **** 
+  29:../getset.h   **** #define PB0  0
+  30:../getset.h   **** #define PB1  1
+  31:../getset.h   **** #define PB2  2
+  32:../getset.h   **** #define PB3  3
+  33:../getset.h   **** #define PB4  4
+  34:../getset.h   **** 
+  35:../getset.h   **** #define ADC1 11
+  36:../getset.h   **** #define ADC2 12
+  37:../getset.h   **** #define ADC3 13
+  38:../getset.h   **** 
+  39:../getset.h   **** #define HIGH 1
+  40:../getset.h   **** #define LOW  0
+  41:../getset.h   **** 
+  42:../getset.h   **** void set(uint8_t sPin, uint8_t value){
+  81               	.LM0:
+  82               	.LFBB1:
+  83               	/* prologue: function */
+  84               	/* frame size = 0 */
+  85 0000 382F      		mov r19,r24
+  43:../getset.h   **** 	if (value) PORTB |= 1 << sPin; // set pin high
+  87               	.LM1:
+  88 0002 6623      		tst r22
+  89 0004 01F0      		breq .L2
+  90 0006 28B3      		in r18,56-32
+  91 0008 81E0      		ldi r24,lo8(1)
+  92 000a 90E0      		ldi r25,hi8(1)
+  93 000c 032E      		mov r0,r19
+  94 000e 00C0      		rjmp 2f
+  95 0010 880F      	1:	lsl r24
+  96 0012 991F      		rol r25
+  97 0014 0A94      	2:	dec r0
+  98 0016 02F4      		brpl 1b
+  99 0018 282B      		or r18,r24
+ 100 001a 28BB      		out 56-32,r18
+ 101 001c 00C0      		rjmp .L3
+ 102               	.L2:
+  44:../getset.h   **** 	else PORTB &= ~(1 << sPin); // set pin low
+ 104               	.LM2:
+ 105 001e 28B3      		in r18,56-32
+ 106 0020 81E0      		ldi r24,lo8(1)
+ 107 0022 90E0      		ldi r25,hi8(1)
+ 108 0024 032E      		mov r0,r19
+ 109 0026 00C0      		rjmp 2f
+ 110 0028 880F      	1:	lsl r24
+ 111 002a 991F      		rol r25
+ 112 002c 0A94      	2:	dec r0
+ 113 002e 02F4      		brpl 1b
+ 114 0030 8095      		com r24
+ 115 0032 8223      		and r24,r18
+ 116 0034 88BB      		out 56-32,r24
+ 117               	.L3:
+  45:../getset.h   **** 	DDRB |= 1 << sPin; // set DDRB pin to output
+ 119               	.LM3:
+ 120 0036 27B3      		in r18,55-32
+ 121 0038 81E0      		ldi r24,lo8(1)
+ 122 003a 90E0      		ldi r25,hi8(1)
+ 123 003c 00C0      		rjmp 2f
+ 124 003e 880F      	1:	lsl r24
+ 125 0040 991F      		rol r25
+ 126 0042 3A95      	2:	dec r19
+ 127 0044 02F4      		brpl 1b
+ 128 0046 282B      		or r18,r24
+ 129 0048 27BB      		out 55-32,r18
+ 130               	/* epilogue start */
+  46:../getset.h   **** }
+ 132               	.LM4:
+ 133 004a 0895      		ret
+ 135               	.Lscope1:
+ 137               		.stabd	78,0,0
+ 140               	.global	get
+ 142               	get:
+ 143               		.stabd	46,0,0
+  47:../getset.h   **** 
+  48:../getset.h   **** uint8_t get(uint8_t gPin){
+ 145               	.LM5:
+ 146               	.LFBB2:
+ 147               	/* prologue: function */
+ 148               	/* frame size = 0 */
+ 149 004c 282F      		mov r18,r24
+  49:../getset.h   **** 	if (gPin > 9) { // analog input
+ 151               	.LM6:
+ 152 004e 8A30      		cpi r24,lo8(10)
+ 153 0050 00F0      		brlo .L6
+  50:../getset.h   **** 		ADCSRA |= 0x88;	// enable ADC (turn on ADC power) & enable ADC interrupts
+ 155               	.LM7:
+ 156 0052 86B1      		in r24,38-32
+ 157 0054 8868      		ori r24,lo8(-120)
+ 158 0056 86B9      		out 38-32,r24
+  51:../getset.h   **** 		ADMUX |= 0x20; // set to left-adjusted result
+ 160               	.LM8:
+ 161 0058 3D9A      		sbi 39-32,5
+  52:../getset.h   **** 		sei(); // turn on interrupts (if not already on)	
+ 163               	.LM9:
+ 164               	/* #APP */
+ 165               	 ;  52 "../getset.h" 1
+ 166 005a 7894      		sei
+ 167               	 ;  0 "" 2
+  53:../getset.h   **** 		ADMUX = (ADMUX & 0xFC) | (gPin-10); // set channel
+ 169               	.LM10:
+ 170               	/* #NOAPP */
+ 171 005c 87B1      		in r24,39-32
+ 172 005e 2A50      		subi r18,lo8(-(-10))
+ 173 0060 8C7F      		andi r24,lo8(-4)
+ 174 0062 822B      		or r24,r18
+ 175 0064 87B9      		out 39-32,r24
+  54:../getset.h   **** 		ADCSRA |= 0x50;	// clear hardware "conversion complete" flag & start conversion
+ 177               	.LM11:
+ 178 0066 86B1      		in r24,38-32
+ 179 0068 8065      		ori r24,lo8(80)
+ 180 006a 86B9      		out 38-32,r24
+ 181               	.L7:
+  55:../getset.h   **** 		while(ADCSRA & (1 << ADSC));	// wait until conversion complete
+ 183               	.LM12:
+ 184 006c 3699      		sbic 38-32,6
+ 185 006e 00C0      		rjmp .L7
+  56:../getset.h   **** 		ADCSRA &= 0x77; // disable ADC interrupts
+ 187               	.LM13:
+ 188 0070 86B1      		in r24,38-32
+ 189 0072 8777      		andi r24,lo8(119)
+ 190 0074 86B9      		out 38-32,r24
+  57:../getset.h   **** 		return (ADCH);	// read ADC (8 M.S.B.);
+ 192               	.LM14:
+ 193 0076 95B1      		in r25,37-32
+ 194 0078 00C0      		rjmp .L8
+ 195               	.L6:
+  58:../getset.h   **** 	
+  59:../getset.h   **** 	} else { // digital input
+  60:../getset.h   **** 		DDRB  &= ~(1 << gPin); // set DDRB pin to input
+ 197               	.LM15:
+ 198 007a 37B3      		in r19,55-32
+ 199 007c 81E0      		ldi r24,lo8(1)
+ 200 007e 90E0      		ldi r25,hi8(1)
+ 201 0080 00C0      		rjmp 2f
+ 202 0082 880F      	1:	lsl r24
+ 203 0084 991F      		rol r25
+ 204 0086 2A95      	2:	dec r18
+ 205 0088 02F4      		brpl 1b
+ 206 008a 282F      		mov r18,r24
+ 207 008c 2095      		com r18
+ 208 008e 2323      		and r18,r19
+ 209 0090 27BB      		out 55-32,r18
+  61:../getset.h   **** 		PORTB |= 1 << gPin; // pullup
+ 211               	.LM16:
+ 212 0092 28B3      		in r18,56-32
+ 213 0094 282B      		or r18,r24
+ 214 0096 28BB      		out 56-32,r18
+  62:../getset.h   **** 		return PINB & (1 << gPin); // return high or low
+ 216               	.LM17:
+ 217 0098 96B3      		in r25,54-32
+ 218 009a 9823      		and r25,r24
+ 219               	.L8:
+  63:../getset.h   **** 	}
+  64:../getset.h   **** }
+ 221               	.LM18:
+ 222 009c 892F      		mov r24,r25
+ 223               	/* epilogue start */
+ 224 009e 0895      		ret
+ 226               	.Lscope2:
+ 228               		.stabd	78,0,0
+ 230               	.global	__vector_9
+ 232               	__vector_9:
+ 233               		.stabd	46,0,0
+  65:../getset.h   **** 
+  66:../getset.h   **** SIGNAL(SIG_ADC)
+  67:../getset.h   **** {
+ 235               	.LM19:
+ 236               	.LFBB3:
+ 237 00a0 1F92      		push __zero_reg__
+ 238 00a2 0F92      		push r0
+ 239 00a4 0FB6      		in r0,__SREG__
+ 240 00a6 0F92      		push r0
+ 241 00a8 1124      		clr __zero_reg__
+ 242               	/* prologue: Signal */
+ 243               	/* frame size = 0 */
+ 244               	/* epilogue start */
+  68:../getset.h   **** 	// need this for the ADC to work properly	
+  69:../getset.h   **** }
+ 246               	.LM20:
+ 247 00aa 0F90      		pop r0
+ 248 00ac 0FBE      		out __SREG__,r0
+ 249 00ae 0F90      		pop r0
+ 250 00b0 1F90      		pop __zero_reg__
+ 251 00b2 1895      		reti
+ 253               	.Lscope3:
+ 255               		.stabd	78,0,0
+ 257               	.global	playTone
+ 259               	playTone:
+ 260               		.stabd	46,0,0
+ 262               	.Ltext2:
+   1:hoatzin.c     **** #include <avr/io.h>
+   2:hoatzin.c     **** #include <avr/signal.h>
+   3:hoatzin.c     **** #include <util/delay.h>
+   4:hoatzin.c     **** #include "../getset.h"
+   5:hoatzin.c     **** 
+   6:hoatzin.c     **** /* the HOATZIN reacts to temperature.
+   7:hoatzin.c     ****  * if the temperature gets warmer, it will make a constant-note chirp
+   8:hoatzin.c     ****  * if the temperature remains the same of goes colder, is makes a happy chirp
+   9:hoatzin.c     ****  * timing does not change: 1 200 000 cycles between chirps
+  10:hoatzin.c     ****  */
+  11:hoatzin.c     **** 
+  12:hoatzin.c     **** // TONES  ==========================================
+  13:hoatzin.c     **** // Start by defining the relationship between 
+  14:hoatzin.c     **** //       note, period, &  frequency. 
+  15:hoatzin.c     **** #define  lb    4065    // 246 Hz
+  16:hoatzin.c     **** #define  c     3830    // 261 Hz
+  17:hoatzin.c     **** #define  d     3400    // 294 Hz
+  18:hoatzin.c     **** #define  ds    3215    // 311 Hz
+  19:hoatzin.c     **** #define  e     3038    // 329 Hz
+  20:hoatzin.c     **** #define  f     2864    // 349 Hz
+  21:hoatzin.c     **** #define  fs    2702    // 370 Hz
+  22:hoatzin.c     **** #define  g     2550    // 392 Hz
+  23:hoatzin.c     **** #define  a     2272    // 440 Hz
+  24:hoatzin.c     **** #define  as    2145    // 446 Hz
+  25:hoatzin.c     **** #define  b     2028    // 493 Hz
+  26:hoatzin.c     **** #define  C     1912    // 523 Hz
+  27:hoatzin.c     **** #define  CS    1805    // 554 Hz
+  28:hoatzin.c     **** #define  D     1702    // 587 Hz
+  29:hoatzin.c     **** #define  DS    1608    // 622 Hz
+  30:hoatzin.c     **** #define  E     1516    // 659 Hz
+  31:hoatzin.c     **** #define  F     1432    // 698 Hz
+  32:hoatzin.c     **** #define  G     1277    // 783 Hz
+  33:hoatzin.c     **** #define  A     1136    // 880 Hz
+  34:hoatzin.c     **** // Define a special note, 'R', to represent a rest
+  35:hoatzin.c     **** 
+  36:hoatzin.c     **** // MELODY and TIMING  =======================================
+  37:hoatzin.c     **** //  melody[] is an array of notes, accompanied by beats[], 
+  38:hoatzin.c     **** //  which sets each note's relative length (higher #, longer note) 
+  39:hoatzin.c     **** uint16_t melody[] = {g, g, g,  g, g, g, g, 10000};
+  40:hoatzin.c     **** uint8_t beats[]  =  {6,  6, 6, 6, 6, 6, 6, 9};
+  41:hoatzin.c     **** 
+  42:hoatzin.c     **** uint16_t melody1[] = {g, a, as,  b};
+  43:hoatzin.c     **** uint8_t beats1[]  =  {4,  2, 2,  4};
+  44:hoatzin.c     **** 
+  45:hoatzin.c     **** uint8_t max_count = sizeof(melody); // Melody length, for looping.
+  46:hoatzin.c     **** uint8_t max_count1 = sizeof(melody1); // Melody length, for looping.
+  47:hoatzin.c     **** 
+  48:hoatzin.c     **** // Set overall tempo
+  49:hoatzin.c     **** //uint16_t tempo = 1000;
+  50:hoatzin.c     **** uint16_t tempo = 315;
+  51:hoatzin.c     **** 
+  52:hoatzin.c     **** // Initialize core variables
+  53:hoatzin.c     **** uint8_t tone, beat;
+  54:hoatzin.c     **** uint32_t duration  = 0;
+  55:hoatzin.c     **** 
+  56:hoatzin.c     **** uint16_t i;
+  57:hoatzin.c     **** 
+  58:hoatzin.c     **** // PLAY TONE  ==============================================
+  59:hoatzin.c     **** // Pulse the speaker to play a tone for a particular duration
+  60:hoatzin.c     **** void playTone(void) {
+ 264               	.LM21:
+ 265               	.LFBB4:
+ 266 00b4 AF92      		push r10
+ 267 00b6 BF92      		push r11
+ 268 00b8 CF92      		push r12
+ 269 00ba DF92      		push r13
+ 270 00bc EF92      		push r14
+ 271 00be FF92      		push r15
+ 272 00c0 0F93      		push r16
+ 273 00c2 1F93      		push r17
+ 274               	/* prologue: function */
+ 275               	/* frame size = 0 */
+  61:hoatzin.c     ****   uint32_t elapsed_time = 0;
+  62:hoatzin.c     ****   if (tone > 0) { // if this isn't a Rest beat, while the tone has 
+ 277               	.LM22:
+ 278 00c4 2091 0000 		lds r18,tone
+ 279 00c8 2223      		tst r18
+ 280 00ca 01F4      		brne .+2
+ 281 00cc 00C0      		rjmp .L21
+  63:hoatzin.c     ****     //  played less long than 'duration', pulse speaker HIGH and LOW
+  64:hoatzin.c     ****     while (elapsed_time < duration) {
+ 283               	.LM23:
+ 284 00ce A090 0000 		lds r10,duration
+ 285 00d2 B090 0000 		lds r11,(duration)+1
+ 286 00d6 C090 0000 		lds r12,(duration)+2
+ 287 00da D090 0000 		lds r13,(duration)+3
+ 288 00de A091 0000 		lds r26,i
+ 289 00e2 8091 0000 		lds r24,i+1
+ 290 00e6 40E0      		ldi r20,lo8(0)
+ 291 00e8 50E0      		ldi r21,hi8(0)
+ 292 00ea 60E0      		ldi r22,hlo8(0)
+ 293 00ec 70E0      		ldi r23,hhi8(0)
+  65:hoatzin.c     ****       
+  66:hoatzin.c     ****       set(PB3, 1); //pull PB3 high
+  67:hoatzin.c     ****       for (i=0; i<tone; i++) asm volatile("nop\n\t"::); //pause
+ 295               	.LM24:
+ 296 00ee E22F      		mov r30,r18
+ 297 00f0 F0E0      		ldi r31,lo8(0)
+  68:hoatzin.c     ****       set(PB3, 0); // pull PB3 low
+  69:hoatzin.c     ****       for (i=0; i<tone; i++) asm volatile("nop\n\t"::); //pause
+ 299               	.LM25:
+ 300 00f2 E22E      		mov r14,r18
+ 301 00f4 FF24      		clr r15
+ 302 00f6 00E0      		ldi r16,lo8(0)
+ 303 00f8 10E0      		ldi r17,hi8(0)
+ 304 00fa 00C0      		rjmp .L15
+ 305               	.L20:
+ 306               	.LBB20:
+ 307               	.LBB21:
+ 309               	.Ltext3:
+ 311               	.LM26:
+ 312 00fc C39A      		sbi 56-32,3
+ 314               	.LM27:
+ 315 00fe BB9A      		sbi 55-32,3
+ 316 0100 20E0      		ldi r18,lo8(0)
+ 317 0102 30E0      		ldi r19,hi8(0)
+ 318 0104 00C0      		rjmp .L16
+ 319               	.L17:
+ 320               	.LBE21:
+ 321               	.LBE20:
+ 323               	.Ltext4:
+ 325               	.LM28:
+ 326               	/* #APP */
+ 327               	 ;  67 "hoatzin.c" 1
+ 328 0106 0000      		nop
+ 329               		
+ 330               	 ;  0 "" 2
+ 331               	/* #NOAPP */
+ 332 0108 2F5F      		subi r18,lo8(-(1))
+ 333 010a 3F4F      		sbci r19,hi8(-(1))
+ 334               	.L16:
+ 335 010c CF01      		movw r24,r30
+ 336 010e AE2F      		mov r26,r30
+ 337 0110 892F      		mov r24,r25
+ 338 0112 2E17      		cp r18,r30
+ 339 0114 3F07      		cpc r19,r31
+ 340 0116 00F0      		brlo .L17
+ 341               	.LBB22:
+ 342               	.LBB23:
+ 344               	.Ltext5:
+ 346               	.LM29:
+ 347 0118 C398      		cbi 56-32,3
+ 349               	.LM30:
+ 350 011a BB9A      		sbi 55-32,3
+ 351 011c 20E0      		ldi r18,lo8(0)
+ 352 011e 30E0      		ldi r19,hi8(0)
+ 353 0120 00C0      		rjmp .L18
+ 354               	.L19:
+ 355               	.LBE23:
+ 356               	.LBE22:
+ 358               	.Ltext6:
+ 360               	.LM31:
+ 361               	/* #APP */
+ 362               	 ;  69 "hoatzin.c" 1
+ 363 0122 0000      		nop
+ 364               		
+ 365               	 ;  0 "" 2
+ 366               	/* #NOAPP */
+ 367 0124 2F5F      		subi r18,lo8(-(1))
+ 368 0126 3F4F      		sbci r19,hi8(-(1))
+ 369               	.L18:
+ 370 0128 2E17      		cp r18,r30
+ 371 012a 3F07      		cpc r19,r31
+ 372 012c 00F0      		brlo .L19
+ 373 012e 4E0D      		add r20,r14
+ 374 0130 5F1D      		adc r21,r15
+ 375 0132 601F      		adc r22,r16
+ 376 0134 711F      		adc r23,r17
+ 377               	.L15:
+ 379               	.LM32:
+ 380 0136 4A15      		cp r20,r10
+ 381 0138 5B05      		cpc r21,r11
+ 382 013a 6C05      		cpc r22,r12
+ 383 013c 7D05      		cpc r23,r13
+ 384 013e 00F0      		brlo .L20
+ 385 0140 A093 0000 		sts i,r26
+ 386 0144 8093 0000 		sts i+1,r24
+ 387               	.L21:
+ 388               	/* epilogue start */
+  70:hoatzin.c     **** 
+  71:hoatzin.c     ****       // Keep track of how long we pulsed
+  72:hoatzin.c     ****       elapsed_time += (tone);
+  73:hoatzin.c     ****     } 
+  74:hoatzin.c     ****   }
+  75:hoatzin.c     **** }
+ 390               	.LM33:
+ 391 0148 1F91      		pop r17
+ 392 014a 0F91      		pop r16
+ 393 014c FF90      		pop r15
+ 394 014e EF90      		pop r14
+ 395 0150 DF90      		pop r13
+ 396 0152 CF90      		pop r12
+ 397 0154 BF90      		pop r11
+ 398 0156 AF90      		pop r10
+ 399 0158 0895      		ret
+ 404               	.Lscope4:
+ 406               		.stabd	78,0,0
+ 408               	.global	main
+ 410               	main:
+ 411               		.stabd	46,0,0
+  76:hoatzin.c     **** 
+  77:hoatzin.c     **** int main(void){
+ 413               	.LM34:
+ 414               	.LFBB5:
+ 415 015a 0F93      		push r16
+ 416 015c 1F93      		push r17
+ 417 015e CF93      		push r28
+ 418 0160 DF93      		push r29
+ 419               	/* prologue: function */
+ 420               	/* frame size = 0 */
+ 421               	.LBB24:
+ 422               	.LBB25:
+ 424               	.Ltext7:
+ 426               	.LM35:
+ 427 0162 C398      		cbi 56-32,3
+ 429               	.LM36:
+ 430 0164 BB9A      		sbi 55-32,3
+ 431               	.L29:
+ 432               	.LBE25:
+ 433               	.LBE24:
+ 434               	.LBB26:
+ 435               	.LBB27:
+ 437               	.LM37:
+ 438 0166 C49A      		sbi 56-32,4
+ 440               	.LM38:
+ 441 0168 BC9A      		sbi 55-32,4
+ 442 016a 00E0      		ldi r16,lo8(melody)
+ 443 016c 10E0      		ldi r17,hi8(melody)
+ 444 016e C0E0      		ldi r28,lo8(0)
+ 445 0170 D0E0      		ldi r29,hi8(0)
+ 446 0172 00C0      		rjmp .L23
+ 447               	.L24:
+ 448               	.LBE27:
+ 449               	.LBE26:
+ 450               	.LBB28:
+ 452               	.Ltext8:
+  78:hoatzin.c     ****   //initialize GPIO pins
+  79:hoatzin.c     ****   set(PB3, 0);//set pb3 low
+  80:hoatzin.c     ****   
+  81:hoatzin.c     ****   //declare and initialize variables
+  82:hoatzin.c     ****   int32_t pause = 1250000;
+  83:hoatzin.c     ****   //change this number to change the frequency
+  84:hoatzin.c     ****   //main loop
+  85:hoatzin.c     ****   while(1){
+  86:hoatzin.c     ****     set(PB4, HIGH);
+  87:hoatzin.c     ****     for (int i=0; i<max_count; i++) {
+  88:hoatzin.c     ****       
+  89:hoatzin.c     ****       tone = melody[i];
+ 454               	.LM39:
+ 455 0174 F801      		movw r30,r16
+ 456 0176 8081      		ld r24,Z
+ 457 0178 8093 0000 		sts tone,r24
+  90:hoatzin.c     ****       beat = beats[i];
+ 459               	.LM40:
+ 460 017c FE01      		movw r30,r28
+ 461 017e E050      		subi r30,lo8(-(beats))
+ 462 0180 F040      		sbci r31,hi8(-(beats))
+ 463 0182 8081      		ld r24,Z
+ 464 0184 8093 0000 		sts beat,r24
+  91:hoatzin.c     ****         
+  92:hoatzin.c     ****       duration = beat * tempo; // Set up timing
+ 466               	.LM41:
+ 467 0188 6091 0000 		lds r22,tempo
+ 468 018c 7091 0000 		lds r23,(tempo)+1
+ 469 0190 90E0      		ldi r25,lo8(0)
+ 470 0192 00D0      		rcall __mulhi3
+ 471 0194 A0E0      		ldi r26,lo8(0)
+ 472 0196 B0E0      		ldi r27,hi8(0)
+ 473 0198 8093 0000 		sts duration,r24
+ 474 019c 9093 0000 		sts (duration)+1,r25
+ 475 01a0 A093 0000 		sts (duration)+2,r26
+ 476 01a4 B093 0000 		sts (duration)+3,r27
+  93:hoatzin.c     ****       
+  94:hoatzin.c     ****       playTone();
+ 478               	.LM42:
+ 479 01a8 00D0      		rcall playTone
+ 481               	.LM43:
+ 482 01aa 2196      		adiw r28,1
+ 483 01ac 0E5F      		subi r16,lo8(-(2))
+ 484 01ae 1F4F      		sbci r17,hi8(-(2))
+ 485               	.L23:
+ 486 01b0 8091 0000 		lds r24,max_count
+ 487 01b4 90E0      		ldi r25,lo8(0)
+ 488 01b6 C817      		cp r28,r24
+ 489 01b8 D907      		cpc r29,r25
+ 490 01ba 04F0      		brlt .L24
+ 491               	.LBE28:
+ 492               	.LBB29:
+ 493               	.LBB30:
+ 495               	.Ltext9:
+ 497               	.LM44:
+ 498 01bc C498      		cbi 56-32,4
+ 500               	.LM45:
+ 501 01be BC9A      		sbi 55-32,4
+ 502 01c0 80E0      		ldi r24,lo8(0)
+ 503 01c2 90E0      		ldi r25,hi8(0)
+ 504 01c4 A0E0      		ldi r26,hlo8(0)
+ 505 01c6 B0E0      		ldi r27,hhi8(0)
+ 506               	.L25:
+ 507               	.LBE30:
+ 508               	.LBE29:
+ 509               	.LBB31:
+ 511               	.Ltext10:
+  95:hoatzin.c     ****     }
+  96:hoatzin.c     ****     set(PB4, LOW);
+  97:hoatzin.c     ****     for(uint32_t j = 0; j < pause; j++) asm volatile("nop\n\t"::); //pause
+ 513               	.LM46:
+ 514               	/* #APP */
+ 515               	 ;  97 "hoatzin.c" 1
+ 516 01c8 0000      		nop
+ 517               		
+ 518               	 ;  0 "" 2
+ 519               	/* #NOAPP */
+ 520 01ca 0196      		adiw r24,1
+ 521 01cc A11D      		adc r26,__zero_reg__
+ 522 01ce B11D      		adc r27,__zero_reg__
+ 523 01d0 803D      		cpi r24,lo8(1250000)
+ 524 01d2 F2E1      		ldi r31,hi8(1250000)
+ 525 01d4 9F07      		cpc r25,r31
+ 526 01d6 F3E1      		ldi r31,hlo8(1250000)
+ 527 01d8 AF07      		cpc r26,r31
+ 528 01da F0E0      		ldi r31,hhi8(1250000)
+ 529 01dc BF07      		cpc r27,r31
+ 530 01de 01F4      		brne .L25
+ 531               	.LBE31:
+ 532               	.LBB32:
+ 533               	.LBB33:
+ 535               	.Ltext11:
+ 537               	.LM47:
+ 538 01e0 C49A      		sbi 56-32,4
+ 540               	.LM48:
+ 541 01e2 BC9A      		sbi 55-32,4
+ 542 01e4 00E0      		ldi r16,lo8(melody1)
+ 543 01e6 10E0      		ldi r17,hi8(melody1)
+ 544 01e8 C0E0      		ldi r28,lo8(0)
+ 545 01ea D0E0      		ldi r29,hi8(0)
+ 546 01ec 00C0      		rjmp .L26
+ 547               	.L27:
+ 548               	.LBE33:
+ 549               	.LBE32:
+ 550               	.LBB34:
+ 552               	.Ltext12:
+  98:hoatzin.c     ****     set(PB4, HIGH);
+  99:hoatzin.c     ****     for (int i=0; i<max_count; i++) {
+ 100:hoatzin.c     ****       
+ 101:hoatzin.c     ****       tone = melody1[i];
+ 554               	.LM49:
+ 555 01ee F801      		movw r30,r16
+ 556 01f0 8081      		ld r24,Z
+ 557 01f2 8093 0000 		sts tone,r24
+ 102:hoatzin.c     ****       beat = beats1[i];
+ 559               	.LM50:
+ 560 01f6 FE01      		movw r30,r28
+ 561 01f8 E050      		subi r30,lo8(-(beats1))
+ 562 01fa F040      		sbci r31,hi8(-(beats1))
+ 563 01fc 8081      		ld r24,Z
+ 564 01fe 8093 0000 		sts beat,r24
+ 103:hoatzin.c     ****         
+ 104:hoatzin.c     ****       duration = beat * tempo; // Set up timing
+ 566               	.LM51:
+ 567 0202 6091 0000 		lds r22,tempo
+ 568 0206 7091 0000 		lds r23,(tempo)+1
+ 569 020a 90E0      		ldi r25,lo8(0)
+ 570 020c 00D0      		rcall __mulhi3
+ 571 020e A0E0      		ldi r26,lo8(0)
+ 572 0210 B0E0      		ldi r27,hi8(0)
+ 573 0212 8093 0000 		sts duration,r24
+ 574 0216 9093 0000 		sts (duration)+1,r25
+ 575 021a A093 0000 		sts (duration)+2,r26
+ 576 021e B093 0000 		sts (duration)+3,r27
+ 105:hoatzin.c     ****       
+ 106:hoatzin.c     ****       playTone();
+ 578               	.LM52:
+ 579 0222 00D0      		rcall playTone
+ 581               	.LM53:
+ 582 0224 2196      		adiw r28,1
+ 583 0226 0E5F      		subi r16,lo8(-(2))
+ 584 0228 1F4F      		sbci r17,hi8(-(2))
+ 585               	.L26:
+ 586 022a 8091 0000 		lds r24,max_count
+ 587 022e 90E0      		ldi r25,lo8(0)
+ 588 0230 C817      		cp r28,r24
+ 589 0232 D907      		cpc r29,r25
+ 590 0234 04F0      		brlt .L27
+ 591               	.LBE34:
+ 592               	.LBB35:
+ 593               	.LBB36:
+ 595               	.Ltext13:
+ 597               	.LM54:
+ 598 0236 C498      		cbi 56-32,4
+ 600               	.LM55:
+ 601 0238 BC9A      		sbi 55-32,4
+ 602 023a 80E0      		ldi r24,lo8(0)
+ 603 023c 90E0      		ldi r25,hi8(0)
+ 604 023e A0E0      		ldi r26,hlo8(0)
+ 605 0240 B0E0      		ldi r27,hhi8(0)
+ 606               	.L28:
+ 607               	.LBE36:
+ 608               	.LBE35:
+ 609               	.LBB37:
+ 611               	.Ltext14:
+ 107:hoatzin.c     ****     }
+ 108:hoatzin.c     ****     set(PB4, LOW);
+ 109:hoatzin.c     ****     // A pause between chirps
+ 110:hoatzin.c     ****     for(uint32_t j = 0; j < pause; j++) asm volatile("nop\n\t"::); //pause
+ 613               	.LM56:
+ 614               	/* #APP */
+ 615               	 ;  110 "hoatzin.c" 1
+ 616 0242 0000      		nop
+ 617               		
+ 618               	 ;  0 "" 2
+ 619               	/* #NOAPP */
+ 620 0244 0196      		adiw r24,1
+ 621 0246 A11D      		adc r26,__zero_reg__
+ 622 0248 B11D      		adc r27,__zero_reg__
+ 623 024a 803D      		cpi r24,lo8(1250000)
+ 624 024c F2E1      		ldi r31,hi8(1250000)
+ 625 024e 9F07      		cpc r25,r31
+ 626 0250 F3E1      		ldi r31,hlo8(1250000)
+ 627 0252 AF07      		cpc r26,r31
+ 628 0254 F0E0      		ldi r31,hhi8(1250000)
+ 629 0256 BF07      		cpc r27,r31
+ 630 0258 01F4      		brne .L28
+ 631 025a 00C0      		rjmp .L29
+ 632               	.LBE37:
+ 634               	.Lscope5:
+ 636               		.stabd	78,0,0
+ 637               	.global	melody
+ 638               		.data
+ 641               	melody:
+ 642 0000 F609      		.word	2550
+ 643 0002 F609      		.word	2550
+ 644 0004 F609      		.word	2550
+ 645 0006 F609      		.word	2550
+ 646 0008 F609      		.word	2550
+ 647 000a F609      		.word	2550
+ 648 000c F609      		.word	2550
+ 649 000e 1027      		.word	10000
+ 650               	.global	beats
+ 653               	beats:
+ 654 0010 06        		.byte	6
+ 655 0011 06        		.byte	6
+ 656 0012 06        		.byte	6
+ 657 0013 06        		.byte	6
+ 658 0014 06        		.byte	6
+ 659 0015 06        		.byte	6
+ 660 0016 06        		.byte	6
+ 661 0017 09        		.byte	9
+ 662               	.global	melody1
+ 665               	melody1:
+ 666 0018 F609      		.word	2550
+ 667 001a E008      		.word	2272
+ 668 001c 6108      		.word	2145
+ 669 001e EC07      		.word	2028
+ 670               	.global	beats1
+ 673               	beats1:
+ 674 0020 04        		.byte	4
+ 675 0021 02        		.byte	2
+ 676 0022 02        		.byte	2
+ 677 0023 04        		.byte	4
+ 678               	.global	max_count
+ 681               	max_count:
+ 682 0024 10        		.byte	16
+ 683               	.global	max_count1
+ 686               	max_count1:
+ 687 0025 08        		.byte	8
+ 688               	.global	tempo
+ 691               	tempo:
+ 692 0026 3B01      		.word	315
+ 693               	.global	duration
+ 694               	.global	duration
+ 695               		.section .bss
+ 698               	duration:
+ 699 0000 0000 0000 		.skip 4,0
+ 700               		.comm tone,1,1
+ 701               		.comm beat,1,1
+ 702               		.comm i,2,1
+ 714               		.text
+ 716               	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 hoatzin.c
+     /tmp/ccbARg6q.s:2      *ABS*:0000003f __SREG__
+     /tmp/ccbARg6q.s:3      *ABS*:0000003e __SP_H__
+     /tmp/ccbARg6q.s:4      *ABS*:0000003d __SP_L__
+     /tmp/ccbARg6q.s:5      *ABS*:00000034 __CCP__
+     /tmp/ccbARg6q.s:6      *ABS*:00000000 __tmp_reg__
+     /tmp/ccbARg6q.s:7      *ABS*:00000001 __zero_reg__
+     /tmp/ccbARg6q.s:76     .text:00000000 set
+     /tmp/ccbARg6q.s:142    .text:0000004c get
+     /tmp/ccbARg6q.s:232    .text:000000a0 __vector_9
+     /tmp/ccbARg6q.s:259    .text:000000b4 playTone
+                            *COM*:00000001 tone
+     /tmp/ccbARg6q.s:698    .bss:00000000 duration
+                            *COM*:00000002 i
+     /tmp/ccbARg6q.s:410    .text:0000015a main
+     /tmp/ccbARg6q.s:641    .data:00000000 melody
+     /tmp/ccbARg6q.s:653    .data:00000010 beats
+                            *COM*:00000001 beat
+     /tmp/ccbARg6q.s:691    .data:00000026 tempo
+     /tmp/ccbARg6q.s:681    .data:00000024 max_count
+     /tmp/ccbARg6q.s:665    .data:00000018 melody1
+     /tmp/ccbARg6q.s:673    .data:00000020 beats1
+     /tmp/ccbARg6q.s:686    .data:00000025 max_count1
+
+UNDEFINED SYMBOLS
+__do_copy_data
+__do_clear_bss
+__mulhi3

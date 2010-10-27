@@ -1,0 +1,741 @@
+   1               		.file	"manakin.c"
+   2               	__SREG__ = 0x3f
+   3               	__SP_H__ = 0x3e
+   4               	__SP_L__ = 0x3d
+   5               	__CCP__  = 0x34
+   6               	__tmp_reg__ = 0
+   7               	__zero_reg__ = 1
+   8               		.global __do_copy_data
+   9               		.global __do_clear_bss
+  12               		.text
+  13               	.Ltext0:
+  74               	.global	set
+  76               	set:
+  77               		.stabd	46,0,0
+  79               	.Ltext1:
+   1:../getset.h   **** //////////////////////////////////////////////////////
+   2:../getset.h   **** //
+   3:../getset.h   **** // GET/SET ABSTRACTION LAYER FOR ATTINY13
+   4:../getset.h   **** //
+   5:../getset.h   **** //////////////////////////////////////////////////////
+   6:../getset.h   **** //
+   7:../getset.h   **** // USAGE
+   8:../getset.h   **** //         get(gPin) to get input state from pin
+   9:../getset.h   **** //             The gPin variable can be anything from 
+  10:../getset.h   **** //             PB0 to PB4 to get digital input and 
+  11:../getset.h   **** //             ADC1 to ADC3 to get analog input.
+  12:../getset.h   **** //             The return value can be HIGH (1) or
+  13:../getset.h   **** //             LOW (0) for digital and 0..255 for analog.
+  14:../getset.h   **** //
+  15:../getset.h   **** //         set(sPin, value) to set state of pin
+  16:../getset.h   **** //             The sPin variable can be anything from
+  17:../getset.h   **** //             PB0 to PB4 to set the output (0-5V) of
+  18:../getset.h   **** //             the output pin.
+  19:../getset.h   **** //             The value variable can be HIGH (1) or
+  20:../getset.h   **** //             LOW (0).
+  21:../getset.h   **** //
+  22:../getset.h   **** //
+  23:../getset.h   **** // (CC) Vincent Leclerc 10/2006
+  24:../getset.h   **** //
+  25:../getset.h   **** //////////////////////////////////////////////////////
+  26:../getset.h   **** 
+  27:../getset.h   **** #include <avr/interrupt.h>
+  28:../getset.h   **** 
+  29:../getset.h   **** #define PB0  0
+  30:../getset.h   **** #define PB1  1
+  31:../getset.h   **** #define PB2  2
+  32:../getset.h   **** #define PB3  3
+  33:../getset.h   **** #define PB4  4
+  34:../getset.h   **** 
+  35:../getset.h   **** #define ADC1 11
+  36:../getset.h   **** #define ADC2 12
+  37:../getset.h   **** #define ADC3 13
+  38:../getset.h   **** 
+  39:../getset.h   **** #define HIGH 1
+  40:../getset.h   **** #define LOW  0
+  41:../getset.h   **** 
+  42:../getset.h   **** void set(uint8_t sPin, uint8_t value){
+  81               	.LM0:
+  82               	.LFBB1:
+  83               	/* prologue: function */
+  84               	/* frame size = 0 */
+  85 0000 382F      		mov r19,r24
+  43:../getset.h   **** 	if (value) PORTB |= 1 << sPin; // set pin high
+  87               	.LM1:
+  88 0002 6623      		tst r22
+  89 0004 01F0      		breq .L2
+  90 0006 28B3      		in r18,56-32
+  91 0008 81E0      		ldi r24,lo8(1)
+  92 000a 90E0      		ldi r25,hi8(1)
+  93 000c 032E      		mov r0,r19
+  94 000e 00C0      		rjmp 2f
+  95 0010 880F      	1:	lsl r24
+  96 0012 991F      		rol r25
+  97 0014 0A94      	2:	dec r0
+  98 0016 02F4      		brpl 1b
+  99 0018 282B      		or r18,r24
+ 100 001a 28BB      		out 56-32,r18
+ 101 001c 00C0      		rjmp .L3
+ 102               	.L2:
+  44:../getset.h   **** 	else PORTB &= ~(1 << sPin); // set pin low
+ 104               	.LM2:
+ 105 001e 28B3      		in r18,56-32
+ 106 0020 81E0      		ldi r24,lo8(1)
+ 107 0022 90E0      		ldi r25,hi8(1)
+ 108 0024 032E      		mov r0,r19
+ 109 0026 00C0      		rjmp 2f
+ 110 0028 880F      	1:	lsl r24
+ 111 002a 991F      		rol r25
+ 112 002c 0A94      	2:	dec r0
+ 113 002e 02F4      		brpl 1b
+ 114 0030 8095      		com r24
+ 115 0032 8223      		and r24,r18
+ 116 0034 88BB      		out 56-32,r24
+ 117               	.L3:
+  45:../getset.h   **** 	DDRB |= 1 << sPin; // set DDRB pin to output
+ 119               	.LM3:
+ 120 0036 27B3      		in r18,55-32
+ 121 0038 81E0      		ldi r24,lo8(1)
+ 122 003a 90E0      		ldi r25,hi8(1)
+ 123 003c 00C0      		rjmp 2f
+ 124 003e 880F      	1:	lsl r24
+ 125 0040 991F      		rol r25
+ 126 0042 3A95      	2:	dec r19
+ 127 0044 02F4      		brpl 1b
+ 128 0046 282B      		or r18,r24
+ 129 0048 27BB      		out 55-32,r18
+ 130               	/* epilogue start */
+  46:../getset.h   **** }
+ 132               	.LM4:
+ 133 004a 0895      		ret
+ 135               	.Lscope1:
+ 137               		.stabd	78,0,0
+ 140               	.global	get
+ 142               	get:
+ 143               		.stabd	46,0,0
+  47:../getset.h   **** 
+  48:../getset.h   **** uint8_t get(uint8_t gPin){
+ 145               	.LM5:
+ 146               	.LFBB2:
+ 147               	/* prologue: function */
+ 148               	/* frame size = 0 */
+ 149 004c 282F      		mov r18,r24
+  49:../getset.h   **** 	if (gPin > 9) { // analog input
+ 151               	.LM6:
+ 152 004e 8A30      		cpi r24,lo8(10)
+ 153 0050 00F0      		brlo .L6
+  50:../getset.h   **** 		ADCSRA |= 0x88;	// enable ADC (turn on ADC power) & enable ADC interrupts
+ 155               	.LM7:
+ 156 0052 86B1      		in r24,38-32
+ 157 0054 8868      		ori r24,lo8(-120)
+ 158 0056 86B9      		out 38-32,r24
+  51:../getset.h   **** 		ADMUX |= 0x20; // set to left-adjusted result
+ 160               	.LM8:
+ 161 0058 3D9A      		sbi 39-32,5
+  52:../getset.h   **** 		sei(); // turn on interrupts (if not already on)	
+ 163               	.LM9:
+ 164               	/* #APP */
+ 165               	 ;  52 "../getset.h" 1
+ 166 005a 7894      		sei
+ 167               	 ;  0 "" 2
+  53:../getset.h   **** 		ADMUX = (ADMUX & 0xFC) | (gPin-10); // set channel
+ 169               	.LM10:
+ 170               	/* #NOAPP */
+ 171 005c 87B1      		in r24,39-32
+ 172 005e 2A50      		subi r18,lo8(-(-10))
+ 173 0060 8C7F      		andi r24,lo8(-4)
+ 174 0062 822B      		or r24,r18
+ 175 0064 87B9      		out 39-32,r24
+  54:../getset.h   **** 		ADCSRA |= 0x50;	// clear hardware "conversion complete" flag & start conversion
+ 177               	.LM11:
+ 178 0066 86B1      		in r24,38-32
+ 179 0068 8065      		ori r24,lo8(80)
+ 180 006a 86B9      		out 38-32,r24
+ 181               	.L7:
+  55:../getset.h   **** 		while(ADCSRA & (1 << ADSC));	// wait until conversion complete
+ 183               	.LM12:
+ 184 006c 3699      		sbic 38-32,6
+ 185 006e 00C0      		rjmp .L7
+  56:../getset.h   **** 		ADCSRA &= 0x77; // disable ADC interrupts
+ 187               	.LM13:
+ 188 0070 86B1      		in r24,38-32
+ 189 0072 8777      		andi r24,lo8(119)
+ 190 0074 86B9      		out 38-32,r24
+  57:../getset.h   **** 		return (ADCH);	// read ADC (8 M.S.B.);
+ 192               	.LM14:
+ 193 0076 95B1      		in r25,37-32
+ 194 0078 00C0      		rjmp .L8
+ 195               	.L6:
+  58:../getset.h   **** 	
+  59:../getset.h   **** 	} else { // digital input
+  60:../getset.h   **** 		DDRB  &= ~(1 << gPin); // set DDRB pin to input
+ 197               	.LM15:
+ 198 007a 37B3      		in r19,55-32
+ 199 007c 81E0      		ldi r24,lo8(1)
+ 200 007e 90E0      		ldi r25,hi8(1)
+ 201 0080 00C0      		rjmp 2f
+ 202 0082 880F      	1:	lsl r24
+ 203 0084 991F      		rol r25
+ 204 0086 2A95      	2:	dec r18
+ 205 0088 02F4      		brpl 1b
+ 206 008a 282F      		mov r18,r24
+ 207 008c 2095      		com r18
+ 208 008e 2323      		and r18,r19
+ 209 0090 27BB      		out 55-32,r18
+  61:../getset.h   **** 		PORTB |= 1 << gPin; // pullup
+ 211               	.LM16:
+ 212 0092 28B3      		in r18,56-32
+ 213 0094 282B      		or r18,r24
+ 214 0096 28BB      		out 56-32,r18
+  62:../getset.h   **** 		return PINB & (1 << gPin); // return high or low
+ 216               	.LM17:
+ 217 0098 96B3      		in r25,54-32
+ 218 009a 9823      		and r25,r24
+ 219               	.L8:
+  63:../getset.h   **** 	}
+  64:../getset.h   **** }
+ 221               	.LM18:
+ 222 009c 892F      		mov r24,r25
+ 223               	/* epilogue start */
+ 224 009e 0895      		ret
+ 226               	.Lscope2:
+ 228               		.stabd	78,0,0
+ 230               	.global	__vector_9
+ 232               	__vector_9:
+ 233               		.stabd	46,0,0
+  65:../getset.h   **** 
+  66:../getset.h   **** SIGNAL(SIG_ADC)
+  67:../getset.h   **** {
+ 235               	.LM19:
+ 236               	.LFBB3:
+ 237 00a0 1F92      		push __zero_reg__
+ 238 00a2 0F92      		push r0
+ 239 00a4 0FB6      		in r0,__SREG__
+ 240 00a6 0F92      		push r0
+ 241 00a8 1124      		clr __zero_reg__
+ 242               	/* prologue: Signal */
+ 243               	/* frame size = 0 */
+ 244               	/* epilogue start */
+  68:../getset.h   **** 	// need this for the ADC to work properly	
+  69:../getset.h   **** }
+ 246               	.LM20:
+ 247 00aa 0F90      		pop r0
+ 248 00ac 0FBE      		out __SREG__,r0
+ 249 00ae 0F90      		pop r0
+ 250 00b0 1F90      		pop __zero_reg__
+ 251 00b2 1895      		reti
+ 253               	.Lscope3:
+ 255               		.stabd	78,0,0
+ 257               	.global	playTone
+ 259               	playTone:
+ 260               		.stabd	46,0,0
+ 262               	.Ltext2:
+   1:manakin.c     **** #include <avr/io.h>
+   2:manakin.c     **** #include <avr/signal.h>
+   3:manakin.c     **** #include <util/delay.h>
+   4:manakin.c     **** #include "../getset.h"
+   5:manakin.c     **** 
+   6:manakin.c     **** /* the GENTOO reacts to light.
+   7:manakin.c     ****  * the lighter it gets, the slower appart the chirps become
+   8:manakin.c     ****  * the darker is get, the closer the chirps become
+   9:manakin.c     ****  */
+  10:manakin.c     **** 
+  11:manakin.c     **** // TONES  ==========================================
+  12:manakin.c     **** // Start by defining the relationship between 
+  13:manakin.c     **** //       note, period, &  frequency. 
+  14:manakin.c     **** #define  lb    4065    // 246 Hz
+  15:manakin.c     **** #define  c     3830    // 261 Hz
+  16:manakin.c     **** #define  d     3400    // 294 Hz
+  17:manakin.c     **** #define  ds    3215    // 311 Hz
+  18:manakin.c     **** #define  e     3038    // 329 Hz
+  19:manakin.c     **** #define  f     2864    // 349 Hz
+  20:manakin.c     **** #define  fs    2702    // 370 Hz
+  21:manakin.c     **** #define  g     2550    // 392 Hz
+  22:manakin.c     **** #define  a     2272    // 440 Hz
+  23:manakin.c     **** #define  as    2145    // 446 Hz
+  24:manakin.c     **** #define  b     2028    // 493 Hz
+  25:manakin.c     **** #define  C     1912    // 523 Hz
+  26:manakin.c     **** #define  CS    1805    // 554 Hz
+  27:manakin.c     **** #define  D     1702    // 587 Hz
+  28:manakin.c     **** #define  DS    1608    // 622 Hz
+  29:manakin.c     **** #define  E     1516    // 659 Hz
+  30:manakin.c     **** #define  F     1432    // 698 Hz
+  31:manakin.c     **** #define  G     1277    // 783 Hz
+  32:manakin.c     **** #define  A     3    // 880 Hz
+  33:manakin.c     **** // Define a special note, 'R', to represent a rest
+  34:manakin.c     **** 
+  35:manakin.c     **** // MELODY and TIMING  =======================================
+  36:manakin.c     **** //  melody[] is an array of notes, accompanied by beats[], 
+  37:manakin.c     **** //  which sets each note's relative length (higher #, longer note) 
+  38:manakin.c     **** uint16_t melody[] = {A, A, A, A, A, A, A, A, A};
+  39:manakin.c     **** uint8_t beats[]  = {20,  15,  25, 22, 7, 7, 86, 2, 45};
+  40:manakin.c     **** 
+  41:manakin.c     **** uint16_t max_count = sizeof(melody); // Melody length, for looping.
+  42:manakin.c     **** 
+  43:manakin.c     **** // Set overall tempo
+  44:manakin.c     **** //uint16_t tempo = 1000;
+  45:manakin.c     **** uint16_t tempo = 315;
+  46:manakin.c     **** 
+  47:manakin.c     **** // Initialize core variables
+  48:manakin.c     **** uint32_t tone = 0;
+  49:manakin.c     **** uint8_t beat = 0;
+  50:manakin.c     **** uint32_t duration  = 0;
+  51:manakin.c     **** 
+  52:manakin.c     **** uint16_t i;
+  53:manakin.c     **** 
+  54:manakin.c     **** // PLAY TONE  ==============================================
+  55:manakin.c     **** // Pulse the speaker to play a tone for a particular duration
+  56:manakin.c     **** void playTone(void) {
+ 264               	.LM21:
+ 265               	.LFBB4:
+ 266 00b4 AF92      		push r10
+ 267 00b6 BF92      		push r11
+ 268 00b8 CF92      		push r12
+ 269 00ba DF92      		push r13
+ 270 00bc EF92      		push r14
+ 271 00be FF92      		push r15
+ 272 00c0 0F93      		push r16
+ 273 00c2 1F93      		push r17
+ 274               	/* prologue: function */
+ 275               	/* frame size = 0 */
+  57:manakin.c     ****   uint32_t elapsed_time = 0;
+  58:manakin.c     ****   if (tone > 0) { // if this isn't a Rest beat, while the tone has 
+ 277               	.LM22:
+ 278 00c4 4091 0000 		lds r20,tone
+ 279 00c8 5091 0000 		lds r21,(tone)+1
+ 280 00cc 6091 0000 		lds r22,(tone)+2
+ 281 00d0 7091 0000 		lds r23,(tone)+3
+ 282 00d4 4115      		cp r20,__zero_reg__
+ 283 00d6 5105      		cpc r21,__zero_reg__
+ 284 00d8 6105      		cpc r22,__zero_reg__
+ 285 00da 7105      		cpc r23,__zero_reg__
+ 286 00dc 01F4      		brne .+2
+ 287 00de 00C0      		rjmp .L21
+  59:manakin.c     ****     //  played less long than 'duration', pulse speaker HIGH and LOW
+  60:manakin.c     ****     while (elapsed_time < duration) {
+ 289               	.LM23:
+ 290 00e0 A090 0000 		lds r10,duration
+ 291 00e4 B090 0000 		lds r11,(duration)+1
+ 292 00e8 C090 0000 		lds r12,(duration)+2
+ 293 00ec D090 0000 		lds r13,(duration)+3
+ 294 00f0 2091 0000 		lds r18,i
+ 295 00f4 3091 0000 		lds r19,(i)+1
+ 296 00f8 EE24      		clr r14
+ 297 00fa FF24      		clr r15
+ 298 00fc 8701      		movw r16,r14
+ 299 00fe 00C0      		rjmp .L15
+ 300               	.L20:
+ 301               	.LBB14:
+ 302               	.LBB15:
+ 304               	.Ltext3:
+ 306               	.LM24:
+ 307 0100 C39A      		sbi 56-32,3
+ 309               	.LM25:
+ 310 0102 BB9A      		sbi 55-32,3
+ 311 0104 20E0      		ldi r18,lo8(0)
+ 312 0106 30E0      		ldi r19,hi8(0)
+ 313 0108 00C0      		rjmp .L16
+ 314               	.L17:
+ 315               	.LBE15:
+ 316               	.LBE14:
+ 318               	.Ltext4:
+  61:manakin.c     ****       
+  62:manakin.c     ****       set(PB3, 1); //pull PB3 high
+  63:manakin.c     ****       for (i=0; i<tone; i++) asm volatile("nop\n\t"::); //pause
+ 320               	.LM26:
+ 321               	/* #APP */
+ 322               	 ;  63 "manakin.c" 1
+ 323 010a 0000      		nop
+ 324               		
+ 325               	 ;  0 "" 2
+ 326               	/* #NOAPP */
+ 327               	.L16:
+ 328 010c C901      		movw r24,r18
+ 329 010e A0E0      		ldi r26,lo8(0)
+ 330 0110 B0E0      		ldi r27,hi8(0)
+ 331 0112 2F5F      		subi r18,lo8(-(1))
+ 332 0114 3F4F      		sbci r19,hi8(-(1))
+ 333 0116 8417      		cp r24,r20
+ 334 0118 9507      		cpc r25,r21
+ 335 011a A607      		cpc r26,r22
+ 336 011c B707      		cpc r27,r23
+ 337 011e 00F0      		brlo .L17
+ 338               	.LBB16:
+ 339               	.LBB17:
+ 341               	.Ltext5:
+ 343               	.LM27:
+ 344 0120 C398      		cbi 56-32,3
+ 346               	.LM28:
+ 347 0122 BB9A      		sbi 55-32,3
+ 348 0124 20E0      		ldi r18,lo8(0)
+ 349 0126 30E0      		ldi r19,hi8(0)
+ 350 0128 00C0      		rjmp .L18
+ 351               	.L19:
+ 352               	.LBE17:
+ 353               	.LBE16:
+ 355               	.Ltext6:
+  64:manakin.c     ****       set(PB3, 0); // pull PB3 low
+  65:manakin.c     ****       for (i=0; i<tone; i++) asm volatile("nop\n\t"::); //pause
+ 357               	.LM29:
+ 358               	/* #APP */
+ 359               	 ;  65 "manakin.c" 1
+ 360 012a 0000      		nop
+ 361               		
+ 362               	 ;  0 "" 2
+ 363               	/* #NOAPP */
+ 364 012c 9F01      		movw r18,r30
+ 365               	.L18:
+ 366 012e F901      		movw r30,r18
+ 367 0130 3196      		adiw r30,1
+ 368 0132 C901      		movw r24,r18
+ 369 0134 A0E0      		ldi r26,lo8(0)
+ 370 0136 B0E0      		ldi r27,hi8(0)
+ 371 0138 8417      		cp r24,r20
+ 372 013a 9507      		cpc r25,r21
+ 373 013c A607      		cpc r26,r22
+ 374 013e B707      		cpc r27,r23
+ 375 0140 00F0      		brlo .L19
+  66:manakin.c     **** 
+  67:manakin.c     ****       // Keep track of how long we pulsed
+  68:manakin.c     ****       elapsed_time += (tone);
+ 377               	.LM30:
+ 378 0142 E40E      		add r14,r20
+ 379 0144 F51E      		adc r15,r21
+ 380 0146 061F      		adc r16,r22
+ 381 0148 171F      		adc r17,r23
+ 382               	.L15:
+ 384               	.LM31:
+ 385 014a EA14      		cp r14,r10
+ 386 014c FB04      		cpc r15,r11
+ 387 014e 0C05      		cpc r16,r12
+ 388 0150 1D05      		cpc r17,r13
+ 389 0152 00F0      		brlo .L20
+ 390 0154 3093 0000 		sts (i)+1,r19
+ 391 0158 2093 0000 		sts i,r18
+ 392               	.L21:
+ 393               	/* epilogue start */
+  69:manakin.c     ****     } 
+  70:manakin.c     ****   }
+  71:manakin.c     **** }
+ 395               	.LM32:
+ 396 015c 1F91      		pop r17
+ 397 015e 0F91      		pop r16
+ 398 0160 FF90      		pop r15
+ 399 0162 EF90      		pop r14
+ 400 0164 DF90      		pop r13
+ 401 0166 CF90      		pop r12
+ 402 0168 BF90      		pop r11
+ 403 016a AF90      		pop r10
+ 404 016c 0895      		ret
+ 409               	.Lscope4:
+ 411               		.stabd	78,0,0
+ 418               	.global	map
+ 420               	map:
+ 421               		.stabd	46,0,0
+  72:manakin.c     **** 
+  73:manakin.c     **** uint32_t map(uint32_t x, uint32_t in_min, uint32_t in_max, uint32_t out_min, uint32_t out_max)
+  74:manakin.c     **** {
+ 423               	.LM33:
+ 424               	.LFBB5:
+ 425 016e 2F92      		push r2
+ 426 0170 3F92      		push r3
+ 427 0172 4F92      		push r4
+ 428 0174 5F92      		push r5
+ 429 0176 6F92      		push r6
+ 430 0178 7F92      		push r7
+ 431 017a 8F92      		push r8
+ 432 017c 9F92      		push r9
+ 433 017e AF92      		push r10
+ 434 0180 BF92      		push r11
+ 435 0182 CF92      		push r12
+ 436 0184 DF92      		push r13
+ 437 0186 EF92      		push r14
+ 438 0188 FF92      		push r15
+ 439 018a 0F93      		push r16
+ 440 018c 1F93      		push r17
+ 441 018e DF93      		push r29
+ 442 0190 CF93      		push r28
+ 443 0192 CDB7      		in r28,__SP_L__
+ 444 0194 DEB7      		in r29,__SP_H__
+ 445               	/* prologue: function */
+ 446               	/* frame size = 0 */
+ 447 0196 3B01      		movw r6,r22
+ 448 0198 4C01      		movw r8,r24
+ 449 019a 1901      		movw r2,r18
+ 450 019c 2A01      		movw r4,r20
+ 451 019e 6D89      		ldd r22,Y+21
+ 452 01a0 7E89      		ldd r23,Y+22
+ 453 01a2 8F89      		ldd r24,Y+23
+ 454 01a4 988D      		ldd r25,Y+24
+ 456               	.LM34:
+ 457 01a6 6A19      		sub r22,r10
+ 458 01a8 7B09      		sbc r23,r11
+ 459 01aa 8C09      		sbc r24,r12
+ 460 01ac 9D09      		sbc r25,r13
+ 461 01ae 621A      		sub r6,r18
+ 462 01b0 730A      		sbc r7,r19
+ 463 01b2 840A      		sbc r8,r20
+ 464 01b4 950A      		sbc r9,r21
+ 465 01b6 A401      		movw r20,r8
+ 466 01b8 9301      		movw r18,r6
+ 467 01ba 00D0      		rcall __mulsi3
+ 468 01bc E218      		sub r14,r2
+ 469 01be F308      		sbc r15,r3
+ 470 01c0 0409      		sbc r16,r4
+ 471 01c2 1509      		sbc r17,r5
+ 472 01c4 A801      		movw r20,r16
+ 473 01c6 9701      		movw r18,r14
+ 474 01c8 00D0      		rcall __udivmodsi4
+ 475 01ca 2A0D      		add r18,r10
+ 476 01cc 3B1D      		adc r19,r11
+ 477 01ce 4C1D      		adc r20,r12
+ 478 01d0 5D1D      		adc r21,r13
+  75:manakin.c     ****   return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+  76:manakin.c     **** }
+ 480               	.LM35:
+ 481 01d2 B901      		movw r22,r18
+ 482 01d4 CA01      		movw r24,r20
+ 483               	/* epilogue start */
+ 484 01d6 CF91      		pop r28
+ 485 01d8 DF91      		pop r29
+ 486 01da 1F91      		pop r17
+ 487 01dc 0F91      		pop r16
+ 488 01de FF90      		pop r15
+ 489 01e0 EF90      		pop r14
+ 490 01e2 DF90      		pop r13
+ 491 01e4 CF90      		pop r12
+ 492 01e6 BF90      		pop r11
+ 493 01e8 AF90      		pop r10
+ 494 01ea 9F90      		pop r9
+ 495 01ec 8F90      		pop r8
+ 496 01ee 7F90      		pop r7
+ 497 01f0 6F90      		pop r6
+ 498 01f2 5F90      		pop r5
+ 499 01f4 4F90      		pop r4
+ 500 01f6 3F90      		pop r3
+ 501 01f8 2F90      		pop r2
+ 502 01fa 0895      		ret
+ 505               	.Lscope5:
+ 507               		.stabd	78,0,0
+ 509               	.global	main
+ 511               	main:
+ 512               		.stabd	46,0,0
+  77:manakin.c     **** 
+  78:manakin.c     **** int main(void){
+ 514               	.LM36:
+ 515               	.LFBB6:
+ 516 01fc 0F93      		push r16
+ 517 01fe 1F93      		push r17
+ 518 0200 CF93      		push r28
+ 519 0202 DF93      		push r29
+ 520               	/* prologue: function */
+ 521               	/* frame size = 0 */
+ 522               	.LBB18:
+ 523               	.LBB19:
+ 525               	.Ltext7:
+ 527               	.LM37:
+ 528 0204 C398      		cbi 56-32,3
+ 530               	.LM38:
+ 531 0206 BB9A      		sbi 55-32,3
+ 532 0208 00C0      		rjmp .L31
+ 533               	.L26:
+ 534               	.LBE19:
+ 535               	.LBE18:
+ 536               	.LBB20:
+ 538               	.Ltext8:
+  79:manakin.c     ****   //initialize GPIO pins
+  80:manakin.c     ****   set(PB3, 0);//set pb3 low
+  81:manakin.c     ****   
+  82:manakin.c     ****   //declare and initialize variables
+  83:manakin.c     ****   int32_t pause = 200000;
+  84:manakin.c     ****   //change this number to change the frequency
+  85:manakin.c     ****   //main loop
+  86:manakin.c     ****   while(1){
+  87:manakin.c     ****     
+  88:manakin.c     ****     for (int i=0; i<max_count; i++) {
+  89:manakin.c     ****     tone = melody[i] * (get(ADC1)/5);
+ 540               	.LM39:
+ 541 020a FE01      		movw r30,r28
+ 542 020c EE0F      		lsl r30
+ 543 020e FF1F      		rol r31
+ 544 0210 E050      		subi r30,lo8(-(melody))
+ 545 0212 F040      		sbci r31,hi8(-(melody))
+ 546 0214 0081      		ld r16,Z
+ 547 0216 1181      		ldd r17,Z+1
+ 548 0218 8BE0      		ldi r24,lo8(11)
+ 549 021a 00D0      		rcall get
+ 550 021c 65E0      		ldi r22,lo8(5)
+ 551 021e 00D0      		rcall __udivmodqi4
+ 552 0220 90E0      		ldi r25,lo8(0)
+ 553 0222 B801      		movw r22,r16
+ 554 0224 00D0      		rcall __mulhi3
+ 555 0226 A0E0      		ldi r26,lo8(0)
+ 556 0228 B0E0      		ldi r27,hi8(0)
+ 557 022a 8093 0000 		sts tone,r24
+ 558 022e 9093 0000 		sts (tone)+1,r25
+ 559 0232 A093 0000 		sts (tone)+2,r26
+ 560 0236 B093 0000 		sts (tone)+3,r27
+  90:manakin.c     ****     beat = beats[i];
+ 562               	.LM40:
+ 563 023a FE01      		movw r30,r28
+ 564 023c E050      		subi r30,lo8(-(beats))
+ 565 023e F040      		sbci r31,hi8(-(beats))
+ 566 0240 8081      		ld r24,Z
+ 567 0242 8093 0000 		sts beat,r24
+  91:manakin.c     ****     
+  92:manakin.c     ****     duration = beat * tempo; // Set up timing
+ 569               	.LM41:
+ 570 0246 6091 0000 		lds r22,tempo
+ 571 024a 7091 0000 		lds r23,(tempo)+1
+ 572 024e 90E0      		ldi r25,lo8(0)
+ 573 0250 00D0      		rcall __mulhi3
+ 574 0252 A0E0      		ldi r26,lo8(0)
+ 575 0254 B0E0      		ldi r27,hi8(0)
+ 576 0256 8093 0000 		sts duration,r24
+ 577 025a 9093 0000 		sts (duration)+1,r25
+ 578 025e A093 0000 		sts (duration)+2,r26
+ 579 0262 B093 0000 		sts (duration)+3,r27
+  93:manakin.c     ****     
+  94:manakin.c     ****     playTone();
+ 581               	.LM42:
+ 582 0266 00D0      		rcall playTone
+ 584               	.LM43:
+ 585 0268 2196      		adiw r28,1
+ 586               	.L30:
+ 587 026a 8091 0000 		lds r24,max_count
+ 588 026e 9091 0000 		lds r25,(max_count)+1
+ 589 0272 C817      		cp r28,r24
+ 590 0274 D907      		cpc r29,r25
+ 591 0276 00F0      		brlo .L26
+ 592               	.LBE20:
+ 593               	.LBB21:
+ 594               	.LBB22:
+ 596               	.Ltext9:
+ 598               	.LM44:
+ 599 0278 C198      		cbi 56-32,1
+ 601               	.LM45:
+ 602 027a B99A      		sbi 55-32,1
+ 603 027c 80E0      		ldi r24,lo8(0)
+ 604 027e 90E0      		ldi r25,hi8(0)
+ 605 0280 A0E0      		ldi r26,hlo8(0)
+ 606 0282 B0E0      		ldi r27,hhi8(0)
+ 607               	.L27:
+ 608               	.LBE22:
+ 609               	.LBE21:
+ 610               	.LBB23:
+ 612               	.Ltext10:
+  95:manakin.c     ****     
+  96:manakin.c     ****     // A pause between chirps
+  97:manakin.c     ****     }
+  98:manakin.c     ****     
+  99:manakin.c     ****     set(PB1, LOW);
+ 100:manakin.c     ****     for(uint32_t j = 0; j < pause; j++) asm volatile("nop\n\t"::); //pause
+ 614               	.LM46:
+ 615               	/* #APP */
+ 616               	 ;  100 "manakin.c" 1
+ 617 0284 0000      		nop
+ 618               		
+ 619               	 ;  0 "" 2
+ 620               	/* #NOAPP */
+ 621 0286 0196      		adiw r24,1
+ 622 0288 A11D      		adc r26,__zero_reg__
+ 623 028a B11D      		adc r27,__zero_reg__
+ 624 028c 8034      		cpi r24,lo8(200000)
+ 625 028e 2DE0      		ldi r18,hi8(200000)
+ 626 0290 9207      		cpc r25,r18
+ 627 0292 23E0      		ldi r18,hlo8(200000)
+ 628 0294 A207      		cpc r26,r18
+ 629 0296 20E0      		ldi r18,hhi8(200000)
+ 630 0298 B207      		cpc r27,r18
+ 631 029a 01F4      		brne .L27
+ 632               	.LBE23:
+ 633               	.LBB24:
+ 634               	.LBB25:
+ 636               	.Ltext11:
+ 638               	.LM47:
+ 639 029c C19A      		sbi 56-32,1
+ 641               	.LM48:
+ 642 029e B99A      		sbi 55-32,1
+ 643               	.L31:
+ 644 02a0 C0E0      		ldi r28,lo8(0)
+ 645 02a2 D0E0      		ldi r29,hi8(0)
+ 646 02a4 00C0      		rjmp .L30
+ 647               	.LBE25:
+ 648               	.LBE24:
+ 650               	.Lscope6:
+ 652               		.stabd	78,0,0
+ 653               	.global	melody
+ 654               		.data
+ 657               	melody:
+ 658 0000 0300      		.word	3
+ 659 0002 0300      		.word	3
+ 660 0004 0300      		.word	3
+ 661 0006 0300      		.word	3
+ 662 0008 0300      		.word	3
+ 663 000a 0300      		.word	3
+ 664 000c 0300      		.word	3
+ 665 000e 0300      		.word	3
+ 666 0010 0300      		.word	3
+ 667               	.global	beats
+ 670               	beats:
+ 671 0012 14        		.byte	20
+ 672 0013 0F        		.byte	15
+ 673 0014 19        		.byte	25
+ 674 0015 16        		.byte	22
+ 675 0016 07        		.byte	7
+ 676 0017 07        		.byte	7
+ 677 0018 56        		.byte	86
+ 678 0019 02        		.byte	2
+ 679 001a 2D        		.byte	45
+ 680               	.global	max_count
+ 683               	max_count:
+ 684 001b 1200      		.word	18
+ 685               	.global	tempo
+ 688               	tempo:
+ 689 001d 3B01      		.word	315
+ 690               	.global	tone
+ 691               	.global	tone
+ 692               		.section .bss
+ 695               	tone:
+ 696 0000 0000 0000 		.skip 4,0
+ 697               	.global	beat
+ 698               	.global	beat
+ 701               	beat:
+ 702 0004 00        		.skip 1,0
+ 703               	.global	duration
+ 704               	.global	duration
+ 707               	duration:
+ 708 0005 0000 0000 		.skip 4,0
+ 709               		.comm i,2,1
+ 718               		.text
+ 720               	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 manakin.c
+     /tmp/ccj57dTP.s:2      *ABS*:0000003f __SREG__
+     /tmp/ccj57dTP.s:3      *ABS*:0000003e __SP_H__
+     /tmp/ccj57dTP.s:4      *ABS*:0000003d __SP_L__
+     /tmp/ccj57dTP.s:5      *ABS*:00000034 __CCP__
+     /tmp/ccj57dTP.s:6      *ABS*:00000000 __tmp_reg__
+     /tmp/ccj57dTP.s:7      *ABS*:00000001 __zero_reg__
+     /tmp/ccj57dTP.s:76     .text:00000000 set
+     /tmp/ccj57dTP.s:142    .text:0000004c get
+     /tmp/ccj57dTP.s:232    .text:000000a0 __vector_9
+     /tmp/ccj57dTP.s:259    .text:000000b4 playTone
+     /tmp/ccj57dTP.s:695    .bss:00000000 tone
+     /tmp/ccj57dTP.s:707    .bss:00000005 duration
+                            *COM*:00000002 i
+     /tmp/ccj57dTP.s:420    .text:0000016e map
+     /tmp/ccj57dTP.s:511    .text:000001fc main
+     /tmp/ccj57dTP.s:657    .data:00000000 melody
+     /tmp/ccj57dTP.s:670    .data:00000012 beats
+     /tmp/ccj57dTP.s:701    .bss:00000004 beat
+     /tmp/ccj57dTP.s:688    .data:0000001d tempo
+     /tmp/ccj57dTP.s:683    .data:0000001b max_count
+
+UNDEFINED SYMBOLS
+__do_copy_data
+__do_clear_bss
+__mulsi3
+__udivmodsi4
+__udivmodqi4
+__mulhi3

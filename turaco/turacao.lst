@@ -1,0 +1,763 @@
+   1               		.file	"turacao.c"
+   2               	__SREG__ = 0x3f
+   3               	__SP_H__ = 0x3e
+   4               	__SP_L__ = 0x3d
+   5               	__CCP__  = 0x34
+   6               	__tmp_reg__ = 0
+   7               	__zero_reg__ = 1
+   8               		.global __do_copy_data
+   9               		.global __do_clear_bss
+  12               		.text
+  13               	.Ltext0:
+  74               	.global	set
+  76               	set:
+  77               		.stabd	46,0,0
+  79               	.Ltext1:
+   1:../getset.h   **** //////////////////////////////////////////////////////
+   2:../getset.h   **** //
+   3:../getset.h   **** // GET/SET ABSTRACTION LAYER FOR ATTINY13
+   4:../getset.h   **** //
+   5:../getset.h   **** //////////////////////////////////////////////////////
+   6:../getset.h   **** //
+   7:../getset.h   **** // USAGE
+   8:../getset.h   **** //         get(gPin) to get input state from pin
+   9:../getset.h   **** //             The gPin variable can be anything from 
+  10:../getset.h   **** //             PB0 to PB4 to get digital input and 
+  11:../getset.h   **** //             ADC1 to ADC3 to get analog input.
+  12:../getset.h   **** //             The return value can be HIGH (1) or
+  13:../getset.h   **** //             LOW (0) for digital and 0..255 for analog.
+  14:../getset.h   **** //
+  15:../getset.h   **** //         set(sPin, value) to set state of pin
+  16:../getset.h   **** //             The sPin variable can be anything from
+  17:../getset.h   **** //             PB0 to PB4 to set the output (0-5V) of
+  18:../getset.h   **** //             the output pin.
+  19:../getset.h   **** //             The value variable can be HIGH (1) or
+  20:../getset.h   **** //             LOW (0).
+  21:../getset.h   **** //
+  22:../getset.h   **** //
+  23:../getset.h   **** // (CC) Vincent Leclerc 10/2006
+  24:../getset.h   **** //
+  25:../getset.h   **** //////////////////////////////////////////////////////
+  26:../getset.h   **** 
+  27:../getset.h   **** #include <avr/interrupt.h>
+  28:../getset.h   **** 
+  29:../getset.h   **** #define PB0  0
+  30:../getset.h   **** #define PB1  1
+  31:../getset.h   **** #define PB2  2
+  32:../getset.h   **** #define PB3  3
+  33:../getset.h   **** #define PB4  4
+  34:../getset.h   **** 
+  35:../getset.h   **** #define ADC1 11
+  36:../getset.h   **** #define ADC2 12
+  37:../getset.h   **** #define ADC3 13
+  38:../getset.h   **** 
+  39:../getset.h   **** #define HIGH 1
+  40:../getset.h   **** #define LOW  0
+  41:../getset.h   **** 
+  42:../getset.h   **** void set(uint8_t sPin, uint8_t value){
+  81               	.LM0:
+  82               	.LFBB1:
+  83               	/* prologue: function */
+  84               	/* frame size = 0 */
+  85 0000 382F      		mov r19,r24
+  43:../getset.h   **** 	if (value) PORTB |= 1 << sPin; // set pin high
+  87               	.LM1:
+  88 0002 6623      		tst r22
+  89 0004 01F0      		breq .L2
+  90 0006 28B3      		in r18,56-32
+  91 0008 81E0      		ldi r24,lo8(1)
+  92 000a 90E0      		ldi r25,hi8(1)
+  93 000c 032E      		mov r0,r19
+  94 000e 00C0      		rjmp 2f
+  95 0010 880F      	1:	lsl r24
+  96 0012 991F      		rol r25
+  97 0014 0A94      	2:	dec r0
+  98 0016 02F4      		brpl 1b
+  99 0018 282B      		or r18,r24
+ 100 001a 28BB      		out 56-32,r18
+ 101 001c 00C0      		rjmp .L3
+ 102               	.L2:
+  44:../getset.h   **** 	else PORTB &= ~(1 << sPin); // set pin low
+ 104               	.LM2:
+ 105 001e 28B3      		in r18,56-32
+ 106 0020 81E0      		ldi r24,lo8(1)
+ 107 0022 90E0      		ldi r25,hi8(1)
+ 108 0024 032E      		mov r0,r19
+ 109 0026 00C0      		rjmp 2f
+ 110 0028 880F      	1:	lsl r24
+ 111 002a 991F      		rol r25
+ 112 002c 0A94      	2:	dec r0
+ 113 002e 02F4      		brpl 1b
+ 114 0030 8095      		com r24
+ 115 0032 8223      		and r24,r18
+ 116 0034 88BB      		out 56-32,r24
+ 117               	.L3:
+  45:../getset.h   **** 	DDRB |= 1 << sPin; // set DDRB pin to output
+ 119               	.LM3:
+ 120 0036 27B3      		in r18,55-32
+ 121 0038 81E0      		ldi r24,lo8(1)
+ 122 003a 90E0      		ldi r25,hi8(1)
+ 123 003c 00C0      		rjmp 2f
+ 124 003e 880F      	1:	lsl r24
+ 125 0040 991F      		rol r25
+ 126 0042 3A95      	2:	dec r19
+ 127 0044 02F4      		brpl 1b
+ 128 0046 282B      		or r18,r24
+ 129 0048 27BB      		out 55-32,r18
+ 130               	/* epilogue start */
+  46:../getset.h   **** }
+ 132               	.LM4:
+ 133 004a 0895      		ret
+ 135               	.Lscope1:
+ 137               		.stabd	78,0,0
+ 140               	.global	get
+ 142               	get:
+ 143               		.stabd	46,0,0
+  47:../getset.h   **** 
+  48:../getset.h   **** uint8_t get(uint8_t gPin){
+ 145               	.LM5:
+ 146               	.LFBB2:
+ 147               	/* prologue: function */
+ 148               	/* frame size = 0 */
+ 149 004c 282F      		mov r18,r24
+  49:../getset.h   **** 	if (gPin > 9) { // analog input
+ 151               	.LM6:
+ 152 004e 8A30      		cpi r24,lo8(10)
+ 153 0050 00F0      		brlo .L6
+  50:../getset.h   **** 		ADCSRA |= 0x88;	// enable ADC (turn on ADC power) & enable ADC interrupts
+ 155               	.LM7:
+ 156 0052 86B1      		in r24,38-32
+ 157 0054 8868      		ori r24,lo8(-120)
+ 158 0056 86B9      		out 38-32,r24
+  51:../getset.h   **** 		ADMUX |= 0x20; // set to left-adjusted result
+ 160               	.LM8:
+ 161 0058 3D9A      		sbi 39-32,5
+  52:../getset.h   **** 		sei(); // turn on interrupts (if not already on)	
+ 163               	.LM9:
+ 164               	/* #APP */
+ 165               	 ;  52 "../getset.h" 1
+ 166 005a 7894      		sei
+ 167               	 ;  0 "" 2
+  53:../getset.h   **** 		ADMUX = (ADMUX & 0xFC) | (gPin-10); // set channel
+ 169               	.LM10:
+ 170               	/* #NOAPP */
+ 171 005c 87B1      		in r24,39-32
+ 172 005e 2A50      		subi r18,lo8(-(-10))
+ 173 0060 8C7F      		andi r24,lo8(-4)
+ 174 0062 822B      		or r24,r18
+ 175 0064 87B9      		out 39-32,r24
+  54:../getset.h   **** 		ADCSRA |= 0x50;	// clear hardware "conversion complete" flag & start conversion
+ 177               	.LM11:
+ 178 0066 86B1      		in r24,38-32
+ 179 0068 8065      		ori r24,lo8(80)
+ 180 006a 86B9      		out 38-32,r24
+ 181               	.L7:
+  55:../getset.h   **** 		while(ADCSRA & (1 << ADSC));	// wait until conversion complete
+ 183               	.LM12:
+ 184 006c 3699      		sbic 38-32,6
+ 185 006e 00C0      		rjmp .L7
+  56:../getset.h   **** 		ADCSRA &= 0x77; // disable ADC interrupts
+ 187               	.LM13:
+ 188 0070 86B1      		in r24,38-32
+ 189 0072 8777      		andi r24,lo8(119)
+ 190 0074 86B9      		out 38-32,r24
+  57:../getset.h   **** 		return (ADCH);	// read ADC (8 M.S.B.);
+ 192               	.LM14:
+ 193 0076 95B1      		in r25,37-32
+ 194 0078 00C0      		rjmp .L8
+ 195               	.L6:
+  58:../getset.h   **** 	
+  59:../getset.h   **** 	} else { // digital input
+  60:../getset.h   **** 		DDRB  &= ~(1 << gPin); // set DDRB pin to input
+ 197               	.LM15:
+ 198 007a 37B3      		in r19,55-32
+ 199 007c 81E0      		ldi r24,lo8(1)
+ 200 007e 90E0      		ldi r25,hi8(1)
+ 201 0080 00C0      		rjmp 2f
+ 202 0082 880F      	1:	lsl r24
+ 203 0084 991F      		rol r25
+ 204 0086 2A95      	2:	dec r18
+ 205 0088 02F4      		brpl 1b
+ 206 008a 282F      		mov r18,r24
+ 207 008c 2095      		com r18
+ 208 008e 2323      		and r18,r19
+ 209 0090 27BB      		out 55-32,r18
+  61:../getset.h   **** 		PORTB |= 1 << gPin; // pullup
+ 211               	.LM16:
+ 212 0092 28B3      		in r18,56-32
+ 213 0094 282B      		or r18,r24
+ 214 0096 28BB      		out 56-32,r18
+  62:../getset.h   **** 		return PINB & (1 << gPin); // return high or low
+ 216               	.LM17:
+ 217 0098 96B3      		in r25,54-32
+ 218 009a 9823      		and r25,r24
+ 219               	.L8:
+  63:../getset.h   **** 	}
+  64:../getset.h   **** }
+ 221               	.LM18:
+ 222 009c 892F      		mov r24,r25
+ 223               	/* epilogue start */
+ 224 009e 0895      		ret
+ 226               	.Lscope2:
+ 228               		.stabd	78,0,0
+ 230               	.global	__vector_9
+ 232               	__vector_9:
+ 233               		.stabd	46,0,0
+  65:../getset.h   **** 
+  66:../getset.h   **** SIGNAL(SIG_ADC)
+  67:../getset.h   **** {
+ 235               	.LM19:
+ 236               	.LFBB3:
+ 237 00a0 1F92      		push __zero_reg__
+ 238 00a2 0F92      		push r0
+ 239 00a4 0FB6      		in r0,__SREG__
+ 240 00a6 0F92      		push r0
+ 241 00a8 1124      		clr __zero_reg__
+ 242               	/* prologue: Signal */
+ 243               	/* frame size = 0 */
+ 244               	/* epilogue start */
+  68:../getset.h   **** 	// need this for the ADC to work properly	
+  69:../getset.h   **** }
+ 246               	.LM20:
+ 247 00aa 0F90      		pop r0
+ 248 00ac 0FBE      		out __SREG__,r0
+ 249 00ae 0F90      		pop r0
+ 250 00b0 1F90      		pop __zero_reg__
+ 251 00b2 1895      		reti
+ 253               	.Lscope3:
+ 255               		.stabd	78,0,0
+ 257               	.global	playTone
+ 259               	playTone:
+ 260               		.stabd	46,0,0
+ 262               	.Ltext2:
+   1:turacao.c     **** #include <avr/io.h>
+   2:turacao.c     **** #include <avr/signal.h>
+   3:turacao.c     **** #include <util/delay.h>
+   4:turacao.c     **** #include "../getset.h"
+   5:turacao.c     **** 
+   6:turacao.c     **** /* the TURACAO reacts to temperature.
+   7:turacao.c     ****  * the warmer it gets, the slower appart the chirps become
+   8:turacao.c     ****  * the colder is get, the closer the chirps become
+   9:turacao.c     ****  * Also, the timing of each chirp is influenced by the previous chirp
+  10:turacao.c     ****  */
+  11:turacao.c     **** 
+  12:turacao.c     **** // TONES  ==========================================
+  13:turacao.c     **** // Start by defining the relationship between 
+  14:turacao.c     **** //       note, period, &  frequency. 
+  15:turacao.c     **** #define  lb    4065    // 246 Hz
+  16:turacao.c     **** #define  c     3830    // 261 Hz
+  17:turacao.c     **** #define  d     3400    // 294 Hz
+  18:turacao.c     **** #define  ds    3215    // 311 Hz
+  19:turacao.c     **** #define  e     3038    // 329 Hz
+  20:turacao.c     **** #define  f     2864    // 349 Hz
+  21:turacao.c     **** #define  fs    2702    // 370 Hz
+  22:turacao.c     **** #define  g     2550    // 392 Hz
+  23:turacao.c     **** #define  a     2272    // 440 Hz
+  24:turacao.c     **** #define  as    2145    // 446 Hz
+  25:turacao.c     **** #define  b     2028    // 493 Hz
+  26:turacao.c     **** #define  C     1912    // 523 Hz
+  27:turacao.c     **** #define  CS    1805    // 554 Hz
+  28:turacao.c     **** #define  D     1702    // 587 Hz
+  29:turacao.c     **** #define  DS    1608    // 622 Hz
+  30:turacao.c     **** #define  E     1516    // 659 Hz
+  31:turacao.c     **** #define  F     1432    // 698 Hz
+  32:turacao.c     **** #define  G     1277    // 783 Hz
+  33:turacao.c     **** #define  A     1136    // 880 Hz
+  34:turacao.c     **** // Define a special note, 'R', to represent a rest
+  35:turacao.c     **** 
+  36:turacao.c     **** // MELODY and TIMING  =======================================
+  37:turacao.c     **** //  melody[] is an array of notes, accompanied by beats[], 
+  38:turacao.c     **** //  which sets each note's relative length (higher #, longer note) 
+  39:turacao.c     **** uint16_t melody[] = {c, ds, c, e, f, c, lb, 10000};
+  40:turacao.c     **** uint8_t beats[]  =  {6,  6, 6, 6, 6, 6, 6,  9};
+  41:turacao.c     **** 
+  42:turacao.c     **** uint16_t max_count = sizeof(melody); // Melody length, for looping.
+  43:turacao.c     **** 
+  44:turacao.c     **** // Set overall tempo
+  45:turacao.c     **** //uint16_t tempo = 1000;
+  46:turacao.c     **** uint16_t tempo = 315;
+  47:turacao.c     **** 
+  48:turacao.c     **** // Initialize core variables
+  49:turacao.c     **** uint8_t tone, beat, previous_chirp = 100;
+  50:turacao.c     **** uint32_t duration  = 0;
+  51:turacao.c     **** 
+  52:turacao.c     **** uint16_t i;
+  53:turacao.c     **** 
+  54:turacao.c     **** // PLAY TONE  ==============================================
+  55:turacao.c     **** // Pulse the speaker to play a tone for a particular duration
+  56:turacao.c     **** void playTone(void) {
+ 264               	.LM21:
+ 265               	.LFBB4:
+ 266 00b4 AF92      		push r10
+ 267 00b6 BF92      		push r11
+ 268 00b8 CF92      		push r12
+ 269 00ba DF92      		push r13
+ 270 00bc EF92      		push r14
+ 271 00be FF92      		push r15
+ 272 00c0 0F93      		push r16
+ 273 00c2 1F93      		push r17
+ 274               	/* prologue: function */
+ 275               	/* frame size = 0 */
+  57:turacao.c     ****   uint32_t elapsed_time = 0;
+  58:turacao.c     ****   if (tone > 0) { // if this isn't a Rest beat, while the tone has 
+ 277               	.LM22:
+ 278 00c4 2091 0000 		lds r18,tone
+ 279 00c8 2223      		tst r18
+ 280 00ca 01F4      		brne .+2
+ 281 00cc 00C0      		rjmp .L21
+  59:turacao.c     ****     //  played less long than 'duration', pulse speaker HIGH and LOW
+  60:turacao.c     ****     while (elapsed_time < duration) {
+ 283               	.LM23:
+ 284 00ce A090 0000 		lds r10,duration
+ 285 00d2 B090 0000 		lds r11,(duration)+1
+ 286 00d6 C090 0000 		lds r12,(duration)+2
+ 287 00da D090 0000 		lds r13,(duration)+3
+ 288 00de A091 0000 		lds r26,i
+ 289 00e2 8091 0000 		lds r24,i+1
+ 290 00e6 40E0      		ldi r20,lo8(0)
+ 291 00e8 50E0      		ldi r21,hi8(0)
+ 292 00ea 60E0      		ldi r22,hlo8(0)
+ 293 00ec 70E0      		ldi r23,hhi8(0)
+  61:turacao.c     ****       
+  62:turacao.c     ****       set(PB3, 1); //pull PB3 high
+  63:turacao.c     ****       for (i=0; i<tone; i++) asm volatile("nop\n\t"::); //pause
+ 295               	.LM24:
+ 296 00ee E22F      		mov r30,r18
+ 297 00f0 F0E0      		ldi r31,lo8(0)
+  64:turacao.c     ****       set(PB3, 0); // pull PB3 low
+  65:turacao.c     ****       for (i=0; i<tone; i++) asm volatile("nop\n\t"::); //pause
+ 299               	.LM25:
+ 300 00f2 E22E      		mov r14,r18
+ 301 00f4 FF24      		clr r15
+ 302 00f6 00E0      		ldi r16,lo8(0)
+ 303 00f8 10E0      		ldi r17,hi8(0)
+ 304 00fa 00C0      		rjmp .L15
+ 305               	.L20:
+ 306               	.LBB14:
+ 307               	.LBB15:
+ 309               	.Ltext3:
+ 311               	.LM26:
+ 312 00fc C39A      		sbi 56-32,3
+ 314               	.LM27:
+ 315 00fe BB9A      		sbi 55-32,3
+ 316 0100 20E0      		ldi r18,lo8(0)
+ 317 0102 30E0      		ldi r19,hi8(0)
+ 318 0104 00C0      		rjmp .L16
+ 319               	.L17:
+ 320               	.LBE15:
+ 321               	.LBE14:
+ 323               	.Ltext4:
+ 325               	.LM28:
+ 326               	/* #APP */
+ 327               	 ;  63 "turacao.c" 1
+ 328 0106 0000      		nop
+ 329               		
+ 330               	 ;  0 "" 2
+ 331               	/* #NOAPP */
+ 332 0108 2F5F      		subi r18,lo8(-(1))
+ 333 010a 3F4F      		sbci r19,hi8(-(1))
+ 334               	.L16:
+ 335 010c CF01      		movw r24,r30
+ 336 010e AE2F      		mov r26,r30
+ 337 0110 892F      		mov r24,r25
+ 338 0112 2E17      		cp r18,r30
+ 339 0114 3F07      		cpc r19,r31
+ 340 0116 00F0      		brlo .L17
+ 341               	.LBB16:
+ 342               	.LBB17:
+ 344               	.Ltext5:
+ 346               	.LM29:
+ 347 0118 C398      		cbi 56-32,3
+ 349               	.LM30:
+ 350 011a BB9A      		sbi 55-32,3
+ 351 011c 20E0      		ldi r18,lo8(0)
+ 352 011e 30E0      		ldi r19,hi8(0)
+ 353 0120 00C0      		rjmp .L18
+ 354               	.L19:
+ 355               	.LBE17:
+ 356               	.LBE16:
+ 358               	.Ltext6:
+ 360               	.LM31:
+ 361               	/* #APP */
+ 362               	 ;  65 "turacao.c" 1
+ 363 0122 0000      		nop
+ 364               		
+ 365               	 ;  0 "" 2
+ 366               	/* #NOAPP */
+ 367 0124 2F5F      		subi r18,lo8(-(1))
+ 368 0126 3F4F      		sbci r19,hi8(-(1))
+ 369               	.L18:
+ 370 0128 2E17      		cp r18,r30
+ 371 012a 3F07      		cpc r19,r31
+ 372 012c 00F0      		brlo .L19
+ 373 012e 4E0D      		add r20,r14
+ 374 0130 5F1D      		adc r21,r15
+ 375 0132 601F      		adc r22,r16
+ 376 0134 711F      		adc r23,r17
+ 377               	.L15:
+ 379               	.LM32:
+ 380 0136 4A15      		cp r20,r10
+ 381 0138 5B05      		cpc r21,r11
+ 382 013a 6C05      		cpc r22,r12
+ 383 013c 7D05      		cpc r23,r13
+ 384 013e 00F0      		brlo .L20
+ 385 0140 A093 0000 		sts i,r26
+ 386 0144 8093 0000 		sts i+1,r24
+ 387               	.L21:
+ 388               	/* epilogue start */
+  66:turacao.c     **** 
+  67:turacao.c     ****       // Keep track of how long we pulsed
+  68:turacao.c     ****       elapsed_time += (tone);
+  69:turacao.c     ****     } 
+  70:turacao.c     ****   }
+  71:turacao.c     **** }
+ 390               	.LM33:
+ 391 0148 1F91      		pop r17
+ 392 014a 0F91      		pop r16
+ 393 014c FF90      		pop r15
+ 394 014e EF90      		pop r14
+ 395 0150 DF90      		pop r13
+ 396 0152 CF90      		pop r12
+ 397 0154 BF90      		pop r11
+ 398 0156 AF90      		pop r10
+ 399 0158 0895      		ret
+ 404               	.Lscope4:
+ 406               		.stabd	78,0,0
+ 413               	.global	map
+ 415               	map:
+ 416               		.stabd	46,0,0
+  72:turacao.c     **** 
+  73:turacao.c     **** uint32_t map(uint32_t x, uint32_t in_min, uint32_t in_max, uint32_t out_min, uint32_t out_max)
+  74:turacao.c     **** {
+ 418               	.LM34:
+ 419               	.LFBB5:
+ 420 015a 2F92      		push r2
+ 421 015c 3F92      		push r3
+ 422 015e 4F92      		push r4
+ 423 0160 5F92      		push r5
+ 424 0162 6F92      		push r6
+ 425 0164 7F92      		push r7
+ 426 0166 8F92      		push r8
+ 427 0168 9F92      		push r9
+ 428 016a AF92      		push r10
+ 429 016c BF92      		push r11
+ 430 016e CF92      		push r12
+ 431 0170 DF92      		push r13
+ 432 0172 EF92      		push r14
+ 433 0174 FF92      		push r15
+ 434 0176 0F93      		push r16
+ 435 0178 1F93      		push r17
+ 436 017a DF93      		push r29
+ 437 017c CF93      		push r28
+ 438 017e CDB7      		in r28,__SP_L__
+ 439 0180 DEB7      		in r29,__SP_H__
+ 440               	/* prologue: function */
+ 441               	/* frame size = 0 */
+ 442 0182 3B01      		movw r6,r22
+ 443 0184 4C01      		movw r8,r24
+ 444 0186 1901      		movw r2,r18
+ 445 0188 2A01      		movw r4,r20
+ 446 018a 6D89      		ldd r22,Y+21
+ 447 018c 7E89      		ldd r23,Y+22
+ 448 018e 8F89      		ldd r24,Y+23
+ 449 0190 988D      		ldd r25,Y+24
+ 451               	.LM35:
+ 452 0192 6A19      		sub r22,r10
+ 453 0194 7B09      		sbc r23,r11
+ 454 0196 8C09      		sbc r24,r12
+ 455 0198 9D09      		sbc r25,r13
+ 456 019a 621A      		sub r6,r18
+ 457 019c 730A      		sbc r7,r19
+ 458 019e 840A      		sbc r8,r20
+ 459 01a0 950A      		sbc r9,r21
+ 460 01a2 A401      		movw r20,r8
+ 461 01a4 9301      		movw r18,r6
+ 462 01a6 00D0      		rcall __mulsi3
+ 463 01a8 E218      		sub r14,r2
+ 464 01aa F308      		sbc r15,r3
+ 465 01ac 0409      		sbc r16,r4
+ 466 01ae 1509      		sbc r17,r5
+ 467 01b0 A801      		movw r20,r16
+ 468 01b2 9701      		movw r18,r14
+ 469 01b4 00D0      		rcall __udivmodsi4
+ 470 01b6 2A0D      		add r18,r10
+ 471 01b8 3B1D      		adc r19,r11
+ 472 01ba 4C1D      		adc r20,r12
+ 473 01bc 5D1D      		adc r21,r13
+  75:turacao.c     ****   return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+  76:turacao.c     **** }
+ 475               	.LM36:
+ 476 01be B901      		movw r22,r18
+ 477 01c0 CA01      		movw r24,r20
+ 478               	/* epilogue start */
+ 479 01c2 CF91      		pop r28
+ 480 01c4 DF91      		pop r29
+ 481 01c6 1F91      		pop r17
+ 482 01c8 0F91      		pop r16
+ 483 01ca FF90      		pop r15
+ 484 01cc EF90      		pop r14
+ 485 01ce DF90      		pop r13
+ 486 01d0 CF90      		pop r12
+ 487 01d2 BF90      		pop r11
+ 488 01d4 AF90      		pop r10
+ 489 01d6 9F90      		pop r9
+ 490 01d8 8F90      		pop r8
+ 491 01da 7F90      		pop r7
+ 492 01dc 6F90      		pop r6
+ 493 01de 5F90      		pop r5
+ 494 01e0 4F90      		pop r4
+ 495 01e2 3F90      		pop r3
+ 496 01e4 2F90      		pop r2
+ 497 01e6 0895      		ret
+ 500               	.Lscope5:
+ 502               		.stabd	78,0,0
+ 504               	.global	main
+ 506               	main:
+ 507               		.stabd	46,0,0
+  77:turacao.c     **** 
+  78:turacao.c     **** int main(void){
+ 509               	.LM37:
+ 510               	.LFBB6:
+ 511 01e8 FF92      		push r15
+ 512 01ea 0F93      		push r16
+ 513 01ec 1F93      		push r17
+ 514 01ee CF93      		push r28
+ 515 01f0 DF93      		push r29
+ 516               	/* prologue: function */
+ 517               	/* frame size = 0 */
+ 518               	.LBB18:
+ 519               	.LBB19:
+ 521               	.Ltext7:
+ 523               	.LM38:
+ 524 01f2 C398      		cbi 56-32,3
+ 526               	.LM39:
+ 527 01f4 BB9A      		sbi 55-32,3
+ 528 01f6 C0E0      		ldi r28,lo8(0)
+ 529 01f8 D0E0      		ldi r29,hi8(0)
+ 530               	.LBE19:
+ 531               	.LBE18:
+ 533               	.Ltext8:
+  79:turacao.c     ****   //initialize GPIO pins
+  80:turacao.c     ****   set(PB3, 0);//set pb3 low
+  81:turacao.c     ****   
+  82:turacao.c     ****   //declare and initialize variables
+  83:turacao.c     ****   int32_t pause;
+  84:turacao.c     ****   //change this number to change the frequency
+  85:turacao.c     ****   //main loop
+  86:turacao.c     ****   while(1){    
+  87:turacao.c     ****     
+  88:turacao.c     ****     for (int i=0; i<max_count; i++) {
+  89:turacao.c     ****     tone = melody[i];
+  90:turacao.c     ****     beat = beats[i];
+  91:turacao.c     ****     //tempo = get(ADC1);
+  92:turacao.c     ****     //tempo *= 2;
+  93:turacao.c     ****     duration = beat * tempo; // Set up timing
+  94:turacao.c     ****     
+  95:turacao.c     ****     playTone();
+  96:turacao.c     ****     
+  97:turacao.c     ****     // A pause between chirps
+  98:turacao.c     ****     }
+  99:turacao.c     ****     
+ 100:turacao.c     ****     set(PB1, HIGH);
+ 101:turacao.c     ****     //pause = map(get(ADC1), 0, 255, 1000000, 0);
+ 102:turacao.c     ****     pause = get(ADC1) * previous_chirp;
+ 103:turacao.c     ****     previous_chirp = get(ADC1);
+ 104:turacao.c     ****     if(previous_chirp == 0)
+ 105:turacao.c     ****       previous_chirp = 1;
+ 535               	.LM40:
+ 536 01fa FF24      		clr r15
+ 537 01fc F394      		inc r15
+ 538 01fe 00C0      		rjmp .L31
+ 539               	.L26:
+ 540               	.LBB20:
+ 542               	.LM41:
+ 543 0200 FE01      		movw r30,r28
+ 544 0202 EE0F      		lsl r30
+ 545 0204 FF1F      		rol r31
+ 546 0206 E050      		subi r30,lo8(-(melody))
+ 547 0208 F040      		sbci r31,hi8(-(melody))
+ 548 020a 8081      		ld r24,Z
+ 549 020c 8093 0000 		sts tone,r24
+ 551               	.LM42:
+ 552 0210 FE01      		movw r30,r28
+ 553 0212 E050      		subi r30,lo8(-(beats))
+ 554 0214 F040      		sbci r31,hi8(-(beats))
+ 555 0216 8081      		ld r24,Z
+ 556 0218 8093 0000 		sts beat,r24
+ 558               	.LM43:
+ 559 021c 6091 0000 		lds r22,tempo
+ 560 0220 7091 0000 		lds r23,(tempo)+1
+ 561 0224 90E0      		ldi r25,lo8(0)
+ 562 0226 00D0      		rcall __mulhi3
+ 563 0228 A0E0      		ldi r26,lo8(0)
+ 564 022a B0E0      		ldi r27,hi8(0)
+ 565 022c 8093 0000 		sts duration,r24
+ 566 0230 9093 0000 		sts (duration)+1,r25
+ 567 0234 A093 0000 		sts (duration)+2,r26
+ 568 0238 B093 0000 		sts (duration)+3,r27
+ 570               	.LM44:
+ 571 023c 00D0      		rcall playTone
+ 573               	.LM45:
+ 574 023e 2196      		adiw r28,1
+ 575               	.L31:
+ 576 0240 8091 0000 		lds r24,max_count
+ 577 0244 9091 0000 		lds r25,(max_count)+1
+ 578 0248 C817      		cp r28,r24
+ 579 024a D907      		cpc r29,r25
+ 580 024c 00F0      		brlo .L26
+ 581               	.LBE20:
+ 582               	.LBB21:
+ 583               	.LBB22:
+ 585               	.Ltext9:
+ 587               	.LM46:
+ 588 024e C19A      		sbi 56-32,1
+ 590               	.LM47:
+ 591 0250 B99A      		sbi 55-32,1
+ 592               	.LBE22:
+ 593               	.LBE21:
+ 595               	.Ltext10:
+ 597               	.LM48:
+ 598 0252 8BE0      		ldi r24,lo8(11)
+ 599 0254 00D0      		rcall get
+ 600 0256 182F      		mov r17,r24
+ 601 0258 0091 0000 		lds r16,previous_chirp
+ 603               	.LM49:
+ 604 025c 8BE0      		ldi r24,lo8(11)
+ 605 025e 00D0      		rcall get
+ 606 0260 8093 0000 		sts previous_chirp,r24
+ 608               	.LM50:
+ 609 0264 8823      		tst r24
+ 610 0266 01F4      		brne .L27
+ 612               	.LM51:
+ 613 0268 F092 0000 		sts previous_chirp,r15
+ 614               	.L27:
+ 616               	.LM52:
+ 617 026c 812F      		mov r24,r17
+ 618 026e 90E0      		ldi r25,lo8(0)
+ 619 0270 602F      		mov r22,r16
+ 620 0272 70E0      		ldi r23,lo8(0)
+ 621 0274 00D0      		rcall __mulhi3
+ 622 0276 AA27      		clr r26
+ 623 0278 97FD      		sbrc r25,7
+ 624 027a A095      		com r26
+ 625 027c BA2F      		mov r27,r26
+ 106:turacao.c     ****       
+ 107:turacao.c     ****     pause *= 400;
+ 627               	.LM53:
+ 628 027e BC01      		movw r22,r24
+ 629 0280 CD01      		movw r24,r26
+ 630 0282 20E9      		ldi r18,lo8(400)
+ 631 0284 31E0      		ldi r19,hi8(400)
+ 632 0286 40E0      		ldi r20,hlo8(400)
+ 633 0288 50E0      		ldi r21,hhi8(400)
+ 634 028a 00D0      		rcall __mulsi3
+ 635 028c 20E0      		ldi r18,lo8(0)
+ 636 028e 30E0      		ldi r19,hi8(0)
+ 637 0290 40E0      		ldi r20,hlo8(0)
+ 638 0292 50E0      		ldi r21,hhi8(0)
+ 639 0294 00C0      		rjmp .L28
+ 640               	.L29:
+ 641               	.LBB23:
+ 108:turacao.c     ****     for(uint32_t j = 0; j < pause; j++) asm volatile("nop\n\t"::); //pause
+ 643               	.LM54:
+ 644               	/* #APP */
+ 645               	 ;  108 "turacao.c" 1
+ 646 0296 0000      		nop
+ 647               		
+ 648               	 ;  0 "" 2
+ 649               	/* #NOAPP */
+ 650 0298 2F5F      		subi r18,lo8(-(1))
+ 651 029a 3F4F      		sbci r19,hi8(-(1))
+ 652 029c 4F4F      		sbci r20,hlo8(-(1))
+ 653 029e 5F4F      		sbci r21,hhi8(-(1))
+ 654               	.L28:
+ 655 02a0 2617      		cp r18,r22
+ 656 02a2 3707      		cpc r19,r23
+ 657 02a4 4807      		cpc r20,r24
+ 658 02a6 5907      		cpc r21,r25
+ 659 02a8 00F0      		brlo .L29
+ 660               	.LBE23:
+ 661               	.LBB24:
+ 662               	.LBB25:
+ 664               	.Ltext11:
+ 666               	.LM55:
+ 667 02aa C198      		cbi 56-32,1
+ 669               	.LM56:
+ 670 02ac B99A      		sbi 55-32,1
+ 671 02ae C0E0      		ldi r28,lo8(0)
+ 672 02b0 D0E0      		ldi r29,hi8(0)
+ 673 02b2 00C0      		rjmp .L31
+ 674               	.LBE25:
+ 675               	.LBE24:
+ 686               	.Lscope6:
+ 688               		.stabd	78,0,0
+ 689               	.global	melody
+ 690               		.data
+ 693               	melody:
+ 694 0000 F60E      		.word	3830
+ 695 0002 8F0C      		.word	3215
+ 696 0004 F60E      		.word	3830
+ 697 0006 DE0B      		.word	3038
+ 698 0008 300B      		.word	2864
+ 699 000a F60E      		.word	3830
+ 700 000c E10F      		.word	4065
+ 701 000e 1027      		.word	10000
+ 702               	.global	beats
+ 705               	beats:
+ 706 0010 06        		.byte	6
+ 707 0011 06        		.byte	6
+ 708 0012 06        		.byte	6
+ 709 0013 06        		.byte	6
+ 710 0014 06        		.byte	6
+ 711 0015 06        		.byte	6
+ 712 0016 06        		.byte	6
+ 713 0017 09        		.byte	9
+ 714               	.global	max_count
+ 717               	max_count:
+ 718 0018 1000      		.word	16
+ 719               	.global	tempo
+ 722               	tempo:
+ 723 001a 3B01      		.word	315
+ 724               	.global	previous_chirp
+ 727               	previous_chirp:
+ 728 001c 64        		.byte	100
+ 729               	.global	duration
+ 730               	.global	duration
+ 731               		.section .bss
+ 734               	duration:
+ 735 0000 0000 0000 		.skip 4,0
+ 736               		.comm tone,1,1
+ 737               		.comm beat,1,1
+ 738               		.comm i,2,1
+ 748               		.text
+ 750               	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 turacao.c
+     /tmp/ccRmU1vE.s:2      *ABS*:0000003f __SREG__
+     /tmp/ccRmU1vE.s:3      *ABS*:0000003e __SP_H__
+     /tmp/ccRmU1vE.s:4      *ABS*:0000003d __SP_L__
+     /tmp/ccRmU1vE.s:5      *ABS*:00000034 __CCP__
+     /tmp/ccRmU1vE.s:6      *ABS*:00000000 __tmp_reg__
+     /tmp/ccRmU1vE.s:7      *ABS*:00000001 __zero_reg__
+     /tmp/ccRmU1vE.s:76     .text:00000000 set
+     /tmp/ccRmU1vE.s:142    .text:0000004c get
+     /tmp/ccRmU1vE.s:232    .text:000000a0 __vector_9
+     /tmp/ccRmU1vE.s:259    .text:000000b4 playTone
+                            *COM*:00000001 tone
+     /tmp/ccRmU1vE.s:734    .bss:00000000 duration
+                            *COM*:00000002 i
+     /tmp/ccRmU1vE.s:415    .text:0000015a map
+     /tmp/ccRmU1vE.s:506    .text:000001e8 main
+     /tmp/ccRmU1vE.s:693    .data:00000000 melody
+     /tmp/ccRmU1vE.s:705    .data:00000010 beats
+                            *COM*:00000001 beat
+     /tmp/ccRmU1vE.s:722    .data:0000001a tempo
+     /tmp/ccRmU1vE.s:717    .data:00000018 max_count
+     /tmp/ccRmU1vE.s:727    .data:0000001c previous_chirp
+
+UNDEFINED SYMBOLS
+__do_copy_data
+__do_clear_bss
+__mulsi3
+__udivmodsi4
+__mulhi3

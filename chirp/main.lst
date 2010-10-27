@@ -1,0 +1,347 @@
+   1               		.file	"main.c"
+   2               	__SREG__ = 0x3f
+   3               	__SP_H__ = 0x3e
+   4               	__SP_L__ = 0x3d
+   5               	__CCP__  = 0x34
+   6               	__tmp_reg__ = 0
+   7               	__zero_reg__ = 1
+   8               		.global __do_copy_data
+   9               		.global __do_clear_bss
+  12               		.text
+  13               	.Ltext0:
+  74               	.global	set
+  76               	set:
+  77               		.stabd	46,0,0
+  79               	.Ltext1:
+   1:../getset.h   **** //////////////////////////////////////////////////////
+   2:../getset.h   **** //
+   3:../getset.h   **** // GET/SET ABSTRACTION LAYER FOR ATTINY13
+   4:../getset.h   **** //
+   5:../getset.h   **** //////////////////////////////////////////////////////
+   6:../getset.h   **** //
+   7:../getset.h   **** // USAGE
+   8:../getset.h   **** //         get(gPin) to get input state from pin
+   9:../getset.h   **** //             The gPin variable can be anything from 
+  10:../getset.h   **** //             PB0 to PB4 to get digital input and 
+  11:../getset.h   **** //             ADC1 to ADC3 to get analog input.
+  12:../getset.h   **** //             The return value can be HIGH (1) or
+  13:../getset.h   **** //             LOW (0) for digital and 0..255 for analog.
+  14:../getset.h   **** //
+  15:../getset.h   **** //         set(sPin, value) to set state of pin
+  16:../getset.h   **** //             The sPin variable can be anything from
+  17:../getset.h   **** //             PB0 to PB4 to set the output (0-5V) of
+  18:../getset.h   **** //             the output pin.
+  19:../getset.h   **** //             The value variable can be HIGH (1) or
+  20:../getset.h   **** //             LOW (0).
+  21:../getset.h   **** //
+  22:../getset.h   **** //
+  23:../getset.h   **** // (CC) Vincent Leclerc 10/2006
+  24:../getset.h   **** //
+  25:../getset.h   **** //////////////////////////////////////////////////////
+  26:../getset.h   **** 
+  27:../getset.h   **** #include <avr/interrupt.h>
+  28:../getset.h   **** 
+  29:../getset.h   **** #define PB0  0
+  30:../getset.h   **** #define PB1  1
+  31:../getset.h   **** #define PB2  2
+  32:../getset.h   **** #define PB3  3
+  33:../getset.h   **** #define PB4  4
+  34:../getset.h   **** 
+  35:../getset.h   **** #define ADC1 11
+  36:../getset.h   **** #define ADC2 12
+  37:../getset.h   **** #define ADC3 13
+  38:../getset.h   **** 
+  39:../getset.h   **** #define HIGH 1
+  40:../getset.h   **** #define LOW  0
+  41:../getset.h   **** 
+  42:../getset.h   **** void set(uint8_t sPin, uint8_t value){
+  81               	.LM0:
+  82               	.LFBB1:
+  83               	/* prologue: function */
+  84               	/* frame size = 0 */
+  85 0000 382F      		mov r19,r24
+  43:../getset.h   **** 	if (value) PORTB |= 1 << sPin; // set pin high
+  87               	.LM1:
+  88 0002 6623      		tst r22
+  89 0004 01F0      		breq .L2
+  90 0006 28B3      		in r18,56-32
+  91 0008 81E0      		ldi r24,lo8(1)
+  92 000a 90E0      		ldi r25,hi8(1)
+  93 000c 032E      		mov r0,r19
+  94 000e 00C0      		rjmp 2f
+  95 0010 880F      	1:	lsl r24
+  96 0012 991F      		rol r25
+  97 0014 0A94      	2:	dec r0
+  98 0016 02F4      		brpl 1b
+  99 0018 282B      		or r18,r24
+ 100 001a 28BB      		out 56-32,r18
+ 101 001c 00C0      		rjmp .L3
+ 102               	.L2:
+  44:../getset.h   **** 	else PORTB &= ~(1 << sPin); // set pin low
+ 104               	.LM2:
+ 105 001e 28B3      		in r18,56-32
+ 106 0020 81E0      		ldi r24,lo8(1)
+ 107 0022 90E0      		ldi r25,hi8(1)
+ 108 0024 032E      		mov r0,r19
+ 109 0026 00C0      		rjmp 2f
+ 110 0028 880F      	1:	lsl r24
+ 111 002a 991F      		rol r25
+ 112 002c 0A94      	2:	dec r0
+ 113 002e 02F4      		brpl 1b
+ 114 0030 8095      		com r24
+ 115 0032 8223      		and r24,r18
+ 116 0034 88BB      		out 56-32,r24
+ 117               	.L3:
+  45:../getset.h   **** 	DDRB |= 1 << sPin; // set DDRB pin to output
+ 119               	.LM3:
+ 120 0036 27B3      		in r18,55-32
+ 121 0038 81E0      		ldi r24,lo8(1)
+ 122 003a 90E0      		ldi r25,hi8(1)
+ 123 003c 00C0      		rjmp 2f
+ 124 003e 880F      	1:	lsl r24
+ 125 0040 991F      		rol r25
+ 126 0042 3A95      	2:	dec r19
+ 127 0044 02F4      		brpl 1b
+ 128 0046 282B      		or r18,r24
+ 129 0048 27BB      		out 55-32,r18
+ 130               	/* epilogue start */
+  46:../getset.h   **** }
+ 132               	.LM4:
+ 133 004a 0895      		ret
+ 135               	.Lscope1:
+ 137               		.stabd	78,0,0
+ 140               	.global	get
+ 142               	get:
+ 143               		.stabd	46,0,0
+  47:../getset.h   **** 
+  48:../getset.h   **** uint8_t get(uint8_t gPin){
+ 145               	.LM5:
+ 146               	.LFBB2:
+ 147               	/* prologue: function */
+ 148               	/* frame size = 0 */
+ 149 004c 282F      		mov r18,r24
+  49:../getset.h   **** 	if (gPin > 9) { // analog input
+ 151               	.LM6:
+ 152 004e 8A30      		cpi r24,lo8(10)
+ 153 0050 00F0      		brlo .L6
+  50:../getset.h   **** 		ADCSRA |= 0x88;	// enable ADC (turn on ADC power) & enable ADC interrupts
+ 155               	.LM7:
+ 156 0052 86B1      		in r24,38-32
+ 157 0054 8868      		ori r24,lo8(-120)
+ 158 0056 86B9      		out 38-32,r24
+  51:../getset.h   **** 		ADMUX |= 0x20; // set to left-adjusted result
+ 160               	.LM8:
+ 161 0058 3D9A      		sbi 39-32,5
+  52:../getset.h   **** 		sei(); // turn on interrupts (if not already on)	
+ 163               	.LM9:
+ 164               	/* #APP */
+ 165               	 ;  52 "../getset.h" 1
+ 166 005a 7894      		sei
+ 167               	 ;  0 "" 2
+  53:../getset.h   **** 		ADMUX = (ADMUX & 0xFC) | (gPin-10); // set channel
+ 169               	.LM10:
+ 170               	/* #NOAPP */
+ 171 005c 87B1      		in r24,39-32
+ 172 005e 2A50      		subi r18,lo8(-(-10))
+ 173 0060 8C7F      		andi r24,lo8(-4)
+ 174 0062 822B      		or r24,r18
+ 175 0064 87B9      		out 39-32,r24
+  54:../getset.h   **** 		ADCSRA |= 0x50;	// clear hardware "conversion complete" flag & start conversion
+ 177               	.LM11:
+ 178 0066 86B1      		in r24,38-32
+ 179 0068 8065      		ori r24,lo8(80)
+ 180 006a 86B9      		out 38-32,r24
+ 181               	.L7:
+  55:../getset.h   **** 		while(ADCSRA & (1 << ADSC));	// wait until conversion complete
+ 183               	.LM12:
+ 184 006c 3699      		sbic 38-32,6
+ 185 006e 00C0      		rjmp .L7
+  56:../getset.h   **** 		ADCSRA &= 0x77; // disable ADC interrupts
+ 187               	.LM13:
+ 188 0070 86B1      		in r24,38-32
+ 189 0072 8777      		andi r24,lo8(119)
+ 190 0074 86B9      		out 38-32,r24
+  57:../getset.h   **** 		return (ADCH);	// read ADC (8 M.S.B.);
+ 192               	.LM14:
+ 193 0076 95B1      		in r25,37-32
+ 194 0078 00C0      		rjmp .L8
+ 195               	.L6:
+  58:../getset.h   **** 	
+  59:../getset.h   **** 	} else { // digital input
+  60:../getset.h   **** 		DDRB  &= ~(1 << gPin); // set DDRB pin to input
+ 197               	.LM15:
+ 198 007a 37B3      		in r19,55-32
+ 199 007c 81E0      		ldi r24,lo8(1)
+ 200 007e 90E0      		ldi r25,hi8(1)
+ 201 0080 00C0      		rjmp 2f
+ 202 0082 880F      	1:	lsl r24
+ 203 0084 991F      		rol r25
+ 204 0086 2A95      	2:	dec r18
+ 205 0088 02F4      		brpl 1b
+ 206 008a 282F      		mov r18,r24
+ 207 008c 2095      		com r18
+ 208 008e 2323      		and r18,r19
+ 209 0090 27BB      		out 55-32,r18
+  61:../getset.h   **** 		PORTB |= 1 << gPin; // pullup
+ 211               	.LM16:
+ 212 0092 28B3      		in r18,56-32
+ 213 0094 282B      		or r18,r24
+ 214 0096 28BB      		out 56-32,r18
+  62:../getset.h   **** 		return PINB & (1 << gPin); // return high or low
+ 216               	.LM17:
+ 217 0098 96B3      		in r25,54-32
+ 218 009a 9823      		and r25,r24
+ 219               	.L8:
+  63:../getset.h   **** 	}
+  64:../getset.h   **** }
+ 221               	.LM18:
+ 222 009c 892F      		mov r24,r25
+ 223               	/* epilogue start */
+ 224 009e 0895      		ret
+ 226               	.Lscope2:
+ 228               		.stabd	78,0,0
+ 230               	.global	__vector_9
+ 232               	__vector_9:
+ 233               		.stabd	46,0,0
+  65:../getset.h   **** 
+  66:../getset.h   **** SIGNAL(SIG_ADC)
+  67:../getset.h   **** {
+ 235               	.LM19:
+ 236               	.LFBB3:
+ 237 00a0 1F92      		push __zero_reg__
+ 238 00a2 0F92      		push r0
+ 239 00a4 0FB6      		in r0,__SREG__
+ 240 00a6 0F92      		push r0
+ 241 00a8 1124      		clr __zero_reg__
+ 242               	/* prologue: Signal */
+ 243               	/* frame size = 0 */
+ 244               	/* epilogue start */
+  68:../getset.h   **** 	// need this for the ADC to work properly	
+  69:../getset.h   **** }
+ 246               	.LM20:
+ 247 00aa 0F90      		pop r0
+ 248 00ac 0FBE      		out __SREG__,r0
+ 249 00ae 0F90      		pop r0
+ 250 00b0 1F90      		pop __zero_reg__
+ 251 00b2 1895      		reti
+ 253               	.Lscope3:
+ 255               		.stabd	78,0,0
+ 257               	.global	main
+ 259               	main:
+ 260               		.stabd	46,0,0
+ 262               	.Ltext2:
+   1:main.c        **** #include <avr/io.h>
+   2:main.c        **** #include <avr/signal.h>
+   3:main.c        **** #include <avr/delay.h>
+   4:main.c        **** #include "../getset.h"
+   5:main.c        **** 
+   6:main.c        **** int main(void){
+ 264               	.LM21:
+ 265               	.LFBB4:
+ 266               	/* prologue: function */
+ 267               	/* frame size = 0 */
+ 268               	.LBB8:
+ 269               	.LBB9:
+ 271               	.Ltext3:
+ 273               	.LM22:
+ 274 00b4 C098      		cbi 56-32,0
+ 276               	.LM23:
+ 277 00b6 B89A      		sbi 55-32,0
+ 278               	.L18:
+ 279               	.LBE9:
+ 280               	.LBE8:
+ 281               	.LBB10:
+ 282               	.LBB11:
+ 284               	.LM24:
+ 285 00b8 C09A      		sbi 56-32,0
+ 287               	.LM25:
+ 288 00ba B89A      		sbi 55-32,0
+ 289               	.LBE11:
+ 290               	.LBE10:
+ 292               	.Ltext4:
+   7:main.c        ****   //initialize GPIO pins
+   8:main.c        ****   set(PB0, 0);//set pb0 low
+   9:main.c        ****   
+  10:main.c        ****   //declare and initialize variables
+  11:main.c        ****   uint16_t i, ain, pause;
+  12:main.c        ****   //change this number to change the frequency
+  13:main.c        ****   
+  14:main.c        ****   //main loop
+  15:main.c        ****   while(1){
+  16:main.c        ****     set(PB0, 1); //pull PB0 high
+  17:main.c        ****     ain = get(ADC1);
+ 294               	.LM26:
+ 295 00bc 8BE0      		ldi r24,lo8(11)
+ 296 00be 00D0      		rcall get
+ 297 00c0 90E0      		ldi r25,lo8(0)
+  18:main.c        ****     ain *= 2;
+ 299               	.LM27:
+ 300 00c2 880F      		lsl r24
+ 301 00c4 991F      		rol r25
+ 302 00c6 20E0      		ldi r18,lo8(0)
+ 303 00c8 30E0      		ldi r19,hi8(0)
+ 304 00ca 00C0      		rjmp .L14
+ 305               	.L15:
+  19:main.c        ****     for (i=0; i<ain; i++) asm volatile("nop\n\t"::); //pause
+ 307               	.LM28:
+ 308               	/* #APP */
+ 309               	 ;  19 "main.c" 1
+ 310 00cc 0000      		nop
+ 311               		
+ 312               	 ;  0 "" 2
+ 313               	/* #NOAPP */
+ 314 00ce 2F5F      		subi r18,lo8(-(1))
+ 315 00d0 3F4F      		sbci r19,hi8(-(1))
+ 316               	.L14:
+ 317 00d2 2817      		cp r18,r24
+ 318 00d4 3907      		cpc r19,r25
+ 319 00d6 00F0      		brlo .L15
+ 320               	.LBB12:
+ 321               	.LBB13:
+ 323               	.Ltext5:
+ 325               	.LM29:
+ 326 00d8 C098      		cbi 56-32,0
+ 328               	.LM30:
+ 329 00da B89A      		sbi 55-32,0
+ 330 00dc 20E0      		ldi r18,lo8(0)
+ 331 00de 30E0      		ldi r19,hi8(0)
+ 332 00e0 00C0      		rjmp .L16
+ 333               	.L20:
+ 334               	.LBE13:
+ 335               	.LBE12:
+ 337               	.Ltext6:
+  20:main.c        ****     set(PB0, 0); // pull PB0 low
+  21:main.c        ****     for (i=0; i<ain; i++) asm volatile("nop\n\t"::); //pause
+ 339               	.LM31:
+ 340               	/* #APP */
+ 341               	 ;  21 "main.c" 1
+ 342 00e2 0000      		nop
+ 343               		
+ 344               	 ;  0 "" 2
+ 345               	/* #NOAPP */
+ 346 00e4 2F5F      		subi r18,lo8(-(1))
+ 347 00e6 3F4F      		sbci r19,hi8(-(1))
+ 348               	.L16:
+ 349 00e8 2817      		cp r18,r24
+ 350 00ea 3907      		cpc r19,r25
+ 351 00ec 00F4      		brsh .L18
+ 352 00ee 00C0      		rjmp .L20
+ 357               	.Lscope4:
+ 359               		.stabd	78,0,0
+ 361               	.Letext0:
+DEFINED SYMBOLS
+                            *ABS*:00000000 main.c
+     /tmp/ccerXyPO.s:2      *ABS*:0000003f __SREG__
+     /tmp/ccerXyPO.s:3      *ABS*:0000003e __SP_H__
+     /tmp/ccerXyPO.s:4      *ABS*:0000003d __SP_L__
+     /tmp/ccerXyPO.s:5      *ABS*:00000034 __CCP__
+     /tmp/ccerXyPO.s:6      *ABS*:00000000 __tmp_reg__
+     /tmp/ccerXyPO.s:7      *ABS*:00000001 __zero_reg__
+     /tmp/ccerXyPO.s:76     .text:00000000 set
+     /tmp/ccerXyPO.s:142    .text:0000004c get
+     /tmp/ccerXyPO.s:232    .text:000000a0 __vector_9
+     /tmp/ccerXyPO.s:259    .text:000000b4 main
+
+UNDEFINED SYMBOLS
+__do_copy_data
+__do_clear_bss
